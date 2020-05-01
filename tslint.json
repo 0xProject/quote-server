@@ -1,0 +1,9 @@
+{
+    "extends": ["@0x/tslint-config"],
+    "rules": {
+        "member-ordering": [true, { "order": "fields-first" }]
+    },
+    "linterOptions": {
+        "exclude": ["**/*.json"]
+    }
+}

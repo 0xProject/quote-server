@@ -1,0 +1,43 @@
+{
+    "name": "@0x/quote-server",
+    "version": "0.0.1",
+    "description": "RFQ Quote server",
+    "main": "lib/src/index.js",
+    "typings": "lib/src/index.d.ts",
+    "author": "Steve Klebanoff, Fabio Berger",
+    "license": "Apache-2.0",
+    "private": true,
+    "scripts": {
+        "build": "tsc -b",
+        "watch": "tsc --watch",
+        "clean": "shx rm -rf lib",
+        "lint": "tslint --format stylish --project .",
+        "lint:fix": "tslint --format stylish --project . --fix",
+        "prettier": "prettier --write '**/*.{ts,tsx,json,md}' --config .prettierrc",
+        "prettier:ci": "prettier --list-different '**/*.{ts,tsx,json,md}' --config .prettierrc",
+        "test": "NODE_ENV=test mocha --require source-map-support/register --require make-promises-safe ./lib/test/**/**/*_test.js --exit",
+        "test:all": "yarn test && yarn prettier:ci && yarn lint"
+    },
+    "devDependencies": {
+        "@0x/typescript-typings": "^4.1.0",
+        "@0x/tslint-config": "^4.0.0",
+        "@types/express": "^4.17.3",
+        "@types/mocha": "^5.2.6",
+        "@types/node": "^12.0.0",
+        "chai": "^4.0.1",
+        "mocha": "^6.0.2",
+        "node-mocks-http": "^1.8.1",
+        "ts-node": "^8.6.2",
+        "tslint": "^6.0.0",
+        "typemoq": "^2.1.0",
+        "typescript": "3.0.1"
+    },
+    "dependencies": {
+        "@0x/json-schemas": "^5.0.7",
+        "@0x/order-utils": "^10.2.4",
+        "@0x/utils": "^5.4.1",
+        "express": "^4.17.1",
+        "express-async-handler": "^1.1.4",
+        "http-status-codes": "^1.4.0"
+    }
+}

@@ -1,0 +1,6 @@
+.vscode
+.DS_Store
+node_modules/
+.env.test
+yarn-error.log
+lib/
