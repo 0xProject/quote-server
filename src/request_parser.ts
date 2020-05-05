@@ -17,15 +17,20 @@ export const parseTakerRequest = (req: express.Request): ParsedTakerRequest => {
 
     const validationResult = schemaValidator.validate(query, schema);
     if (validationResult.valid) {
-        const apiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
+        let apiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
         if (typeof apiKey !== 'string') {
-            throw new Error(`No API key specified`);
+            apiKey = undefined;
+        }
+        let canMakerControlSettlement = query.canMakerControlSettlement;
+        if (typeof canMakerControlSettlement !== 'boolean') {
+            canMakerControlSettlement = undefined;
         }
         const takerRequestBase = {
             sellToken: query.sellToken,
             buyToken: query.buyToken,
             apiKey,
             takerAddress: query.takerAddress,
+            canMakerControlSettlement,
         };
 
         const takerRequest: TakerRequest = query.sellAmount

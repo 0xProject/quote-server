@@ -7,11 +7,12 @@ import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
 import { parseTakerRequest } from './request_parser';
 import { Quoter } from './types';
 
-export const generateApiKeyHandler = (allowedApiKeys: string[]): express.RequestHandler => {
+export const generateApiKeyHandler = (): express.RequestHandler => {
     const handler = (req: express.Request, res: express.Response, next: NextFunction) => {
+        const query = req.query;
         const zeroExApiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
 
-        const isValid = zeroExApiKey && typeof zeroExApiKey === 'string' && allowedApiKeys.includes(zeroExApiKey);
+        const isValid = query.canMakerControlSettlement || (!query.canMakerControlSettlement && zeroExApiKey && typeof zeroExApiKey === 'string');
         if (isValid) {
             next();
         } else {

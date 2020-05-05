@@ -5,10 +5,10 @@ import * as HttpStatus from 'http-status-codes';
 import { generateApiKeyHandler, takerRequestHandler } from './handlers';
 import { Quoter } from './types';
 
-export const serverRoutes = (allowedApiKeys: string[], quoteStrategy: Quoter) => {
+export const serverRoutes = (quoteStrategy: Quoter) => {
     const router = express.Router();
 
-    const apiKeyHandler = generateApiKeyHandler(allowedApiKeys);
+    const apiKeyHandler = generateApiKeyHandler();
     router.use(apiKeyHandler);
 
     router.get(

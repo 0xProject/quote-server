@@ -11,7 +11,8 @@ export type TakerRequest = RequireOnlyOne<
         sellToken: string;
         buyToken: string;
         takerAddress: string;
-        apiKey: string;
+        apiKey?: string;
+        canMakerControlSettlement?: boolean;
         sellAmount?: BigNumber;
         buyAmount?: BigNumber;
     },
@@ -23,7 +24,12 @@ export type IndicativeQuote = Pick<
     'makerAssetData' | 'makerAssetAmount' | 'takerAssetData' | 'takerAssetAmount' | 'expirationTimeSeconds'
 >;
 
+export interface FirmQuote {
+    signedOrder: SignedOrder;
+    quoteExpiry: number; // If RFQT order, simply set to order expiry
+}
+
 export interface Quoter {
     fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuote | undefined>;
-    fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<SignedOrder | undefined>;
+    fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuote | undefined>;
 }

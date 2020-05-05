@@ -31,8 +31,8 @@ const fakeOrder: SignedOrder = {
 };
 
 describe('api key handler', () => {
-    it('reject when no API key specified', () => {
-        const handler = generateApiKeyHandler(['abc']);
+    it('reject when canMakerControlSettlement == false & no API key specified', () => {
+        const handler = generateApiKeyHandler();
         const req = httpMocks.createRequest();
         const resp = httpMocks.createResponse();
 
@@ -43,8 +43,8 @@ describe('api key handler', () => {
         expect(resp._getStatusCode()).to.eql(HttpStatus.UNAUTHORIZED);
         expect(resp._getJSONData()).to.eql({ errors: ['Invalid API key'] });
     });
-    it('reject when bad API key specified', () => {
-        const handler = generateApiKeyHandler(['abc']);
+    it('accept when canMakerControlSettlement == false & API Key specified', () => {
+        const handler = generateApiKeyHandler();
         const req = httpMocks.createRequest({
             headers: { '0x-api-key': 'cde' },
         });
@@ -54,12 +54,29 @@ describe('api key handler', () => {
             return;
         });
 
-        expect(resp._getStatusCode()).to.eql(HttpStatus.UNAUTHORIZED);
-        expect(resp._getJSONData()).to.eql({ errors: ['Invalid API key'] });
+        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
     });
-    it('reject pass when good API key used', () => {
-        const handler = generateApiKeyHandler(['abc', 'cde']);
+    it('accept when canMakerControlSettlement == true & no API Key specified', () => {
+        const handler = generateApiKeyHandler();
         const req = httpMocks.createRequest({
+            query: {
+                canMakerControlSettlement: true,
+            }
+        });
+        const resp = httpMocks.createResponse();
+
+        handler(req, resp, () => {
+            return;
+        });
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
+    });
+    it('accept when canMakerControlSettlement == true & API Key specified', () => {
+        const handler = generateApiKeyHandler();
+        const req = httpMocks.createRequest({
+            query: {
+                canMakerControlSettlement: true,
+            },
             headers: { '0x-api-key': 'cde' },
         });
         const resp = httpMocks.createResponse();
@@ -79,13 +96,18 @@ describe('taker request handler', () => {
         buyAmount: new BigNumber(1000000000000000000),
         takerAddress: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
         apiKey: 'kool-api-key',
+        canMakerControlSettlement: undefined,
     };
 
     it('should defer to quoter and return response for firm quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+        const expectedResponse = {
+            signedOrder: fakeOrder,
+            quoteExpiry: +new Date(),
+        };
         quoter
             .setup(async q => q.fetchFirmQuoteAsync(fakeTakerRequest))
-            .returns(async () => fakeOrder)
+            .returns(async () => expectedResponse)
             .verifiable(TypeMoq.Times.once());
 
         const req = httpMocks.createRequest({
@@ -102,7 +124,40 @@ describe('taker request handler', () => {
         await takerRequestHandler('firm', quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(fakeOrder)));
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse)));
+
+        quoter.verifyAll();
+    });
+    it('should succeed without an API key if `canMakerControlSettlement` is set to `true` when requesting a firm quote', async () => {
+        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+        const expectedResponse = {
+            signedOrder: fakeOrder,
+            quoteExpiry: +new Date(),
+        };
+        const takerRequest = {
+            ...fakeTakerRequest,
+            canMakerControlSettlement: true,
+        };
+        quoter
+            .setup(async q => q.fetchFirmQuoteAsync(takerRequest))
+            .returns(async () => expectedResponse)
+            .verifiable(TypeMoq.Times.once());
+
+        const req = httpMocks.createRequest({
+            query: {
+                buyToken: takerRequest.buyToken,
+                sellToken: takerRequest.sellToken,
+                buyAmount: takerRequest.buyAmount.toString(),
+                takerAddress: takerRequest.takerAddress,
+                canMakerControlSettlement: takerRequest.canMakerControlSettlement,
+            }
+        });
+        const resp = httpMocks.createResponse();
+
+        await takerRequestHandler('firm', quoter.object, req, resp);
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse)));
 
         quoter.verifyAll();
     });
