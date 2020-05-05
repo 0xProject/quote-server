@@ -23,13 +23,13 @@ export const generateApiKeyHandler = (allowedApiKeys: string[]): express.Request
     return handler;
 };
 
-export const takerRequestHandler = async (
+export const rfqtRequestHandler = async (
     takerRequestType: 'firm' | 'indicative',
     quoter: Quoter,
     req: express.Request,
     res: express.Response,
 ) => {
-    const takerRequestResponse = parseTakerRequest(req);
+    const takerRequestResponse = parseTakerRequest(req, true);
 
     if (!takerRequestResponse.isValid) {
         return res.status(HttpStatus.BAD_REQUEST).json({ errors: takerRequestResponse.errors });
@@ -38,8 +38,31 @@ export const takerRequestHandler = async (
     const takerRequest = takerRequestResponse.takerRequest;
     const responsePromise =
         takerRequestType === 'firm'
-            ? quoter.fetchFirmQuoteAsync(takerRequest)
-            : quoter.fetchIndicativeQuoteAsync(takerRequest);
+            ? quoter.fetchRFQTFirmQuoteAsync(takerRequest)
+            : quoter.fetchRFQTIndicativeQuoteAsync(takerRequest);
+
+    const response = await responsePromise;
+    const result = response ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
+    return result.end();
+};
+
+export const rfqmRequestHandler = async (
+    takerRequestType: 'firm' | 'indicative',
+    quoter: Quoter,
+    req: express.Request,
+    res: express.Response,
+) => {
+    const takerRequestResponse = parseTakerRequest(req, false);
+
+    if (!takerRequestResponse.isValid) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ errors: takerRequestResponse.errors });
+    }
+
+    const takerRequest = takerRequestResponse.takerRequest;
+    const responsePromise =
+        takerRequestType === 'firm'
+            ? quoter.fetchRFQMFirmQuoteAsync(takerRequest)
+            : quoter.fetchRFQMIndicativeQuoteAsync(takerRequest);
 
     const response = await responsePromise;
     const result = response ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);

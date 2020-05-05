@@ -5,7 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 import * as httpMocks from 'node-mocks-http';
 import * as TypeMoq from 'typemoq';
 
-import { generateApiKeyHandler, takerRequestHandler } from '../src/handlers';
+import { generateApiKeyHandler, rfqmRequestHandler, rfqtRequestHandler } from '../src/handlers';
 import { Quoter, TakerRequest } from '../src/types';
 
 const expect = chai.expect;
@@ -30,7 +30,7 @@ const fakeOrder: SignedOrder = {
     signature: 'fakeSignature',
 };
 
-describe('api key handler', () => {
+describe('RFQT api key handler', () => {
     it('reject when no API key specified', () => {
         const handler = generateApiKeyHandler(['abc']);
         const req = httpMocks.createRequest();
@@ -72,7 +72,7 @@ describe('api key handler', () => {
     });
 });
 
-describe('taker request handler', () => {
+describe('RFQT request handler', () => {
     const fakeTakerRequest: TakerRequest = {
         buyToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
         sellToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
@@ -84,7 +84,7 @@ describe('taker request handler', () => {
     it('should defer to quoter and return response for firm quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         quoter
-            .setup(async q => q.fetchFirmQuoteAsync(fakeTakerRequest))
+            .setup(async q => q.fetchRFQTFirmQuoteAsync(fakeTakerRequest))
             .returns(async () => fakeOrder)
             .verifiable(TypeMoq.Times.once());
 
@@ -99,7 +99,7 @@ describe('taker request handler', () => {
         });
         const resp = httpMocks.createResponse();
 
-        await takerRequestHandler('firm', quoter.object, req, resp);
+        await rfqtRequestHandler('firm', quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
         expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(fakeOrder)));
@@ -118,7 +118,7 @@ describe('taker request handler', () => {
             expirationTimeSeconds,
         };
         quoter
-            .setup(async q => q.fetchIndicativeQuoteAsync(fakeTakerRequest))
+            .setup(async q => q.fetchRFQTIndicativeQuoteAsync(fakeTakerRequest))
             .returns(async () => indicativeQuote)
             .verifiable(TypeMoq.Times.once());
 
@@ -133,7 +133,7 @@ describe('taker request handler', () => {
         });
         const resp = httpMocks.createResponse();
 
-        await takerRequestHandler('indicative', quoter.object, req, resp);
+        await rfqtRequestHandler('indicative', quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
         expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(indicativeQuote)));
@@ -143,7 +143,7 @@ describe('taker request handler', () => {
     it('should handle empty indicative quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         quoter
-            .setup(async q => q.fetchIndicativeQuoteAsync(fakeTakerRequest))
+            .setup(async q => q.fetchRFQTIndicativeQuoteAsync(fakeTakerRequest))
             .returns(async () => undefined)
             .verifiable(TypeMoq.Times.once());
 
@@ -158,7 +158,7 @@ describe('taker request handler', () => {
         });
         const resp = httpMocks.createResponse();
 
-        await takerRequestHandler('indicative', quoter.object, req, resp);
+        await rfqtRequestHandler('indicative', quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.NO_CONTENT);
 
@@ -167,7 +167,7 @@ describe('taker request handler', () => {
     it('should handle empty firm quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         quoter
-            .setup(async q => q.fetchFirmQuoteAsync(fakeTakerRequest))
+            .setup(async q => q.fetchRFQTFirmQuoteAsync(fakeTakerRequest))
             .returns(async () => undefined)
             .verifiable(TypeMoq.Times.once());
 
@@ -182,7 +182,7 @@ describe('taker request handler', () => {
         });
         const resp = httpMocks.createResponse();
 
-        await takerRequestHandler('firm', quoter.object, req, resp);
+        await rfqtRequestHandler('firm', quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.NO_CONTENT);
 
@@ -201,7 +201,173 @@ describe('taker request handler', () => {
         });
         const resp = httpMocks.createResponse();
 
-        await takerRequestHandler('firm', quoter.object, req, resp);
+        await rfqtRequestHandler('firm', quoter.object, req, resp);
+        expect(resp._getStatusCode()).to.eql(HttpStatus.BAD_REQUEST);
+        const returnedData = resp._getJSONData();
+        expect(Object.keys(returnedData)).to.eql(['errors']);
+        expect(returnedData.errors.length).to.eql(1);
+        expect(returnedData.errors[0]).to.eql('instance requires property "buyToken"');
+    });
+});
+
+describe('RFQM request handler', () => {
+    const fakeTakerRequest: TakerRequest = {
+        buyToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
+        sellToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        buyAmount: new BigNumber(1000000000000000000),
+        takerAddress: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
+        apiKey: undefined,
+    };
+
+    it('should defer to quoter and return response for firm quote with API key', async () => {
+        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+        const expectedResponse = {
+            signedOrder: fakeOrder,
+            quoteExpiry: +new Date(),
+        };
+        quoter
+            .setup(async q => q.fetchRFQMFirmQuoteAsync(fakeTakerRequest))
+            .returns(async () => expectedResponse)
+            .verifiable(TypeMoq.Times.once());
+
+        const req = httpMocks.createRequest({
+            query: {
+                buyToken: fakeTakerRequest.buyToken,
+                sellToken: fakeTakerRequest.sellToken,
+                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                takerAddress: fakeTakerRequest.takerAddress,
+            },
+            headers: { '0x-api-key': fakeTakerRequest.apiKey },
+        });
+        const resp = httpMocks.createResponse();
+
+        await rfqmRequestHandler('firm', quoter.object, req, resp);
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse)));
+
+        quoter.verifyAll();
+    });
+    it('should defer to quoter and return response for firm quote without API key', async () => {
+        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+        const expectedResponse = {
+            signedOrder: fakeOrder,
+            quoteExpiry: +new Date(),
+        };
+        quoter
+            .setup(async q => q.fetchRFQMFirmQuoteAsync(fakeTakerRequest))
+            .returns(async () => expectedResponse)
+            .verifiable(TypeMoq.Times.once());
+
+        const req = httpMocks.createRequest({
+            query: {
+                buyToken: fakeTakerRequest.buyToken,
+                sellToken: fakeTakerRequest.sellToken,
+                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                takerAddress: fakeTakerRequest.takerAddress,
+            }
+        });
+        const resp = httpMocks.createResponse();
+
+        await rfqmRequestHandler('firm', quoter.object, req, resp);
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse)));
+
+        quoter.verifyAll();
+    });
+    it('should defer to quoter and return response for indicative quote', async () => {
+        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+
+        const { makerAssetData, makerAssetAmount, takerAssetAmount, takerAssetData, expirationTimeSeconds } = fakeOrder;
+        const indicativeQuote = {
+            makerAssetData,
+            makerAssetAmount,
+            takerAssetAmount,
+            takerAssetData,
+            expirationTimeSeconds,
+        };
+        quoter
+            .setup(async q => q.fetchRFQMIndicativeQuoteAsync(fakeTakerRequest))
+            .returns(async () => indicativeQuote)
+            .verifiable(TypeMoq.Times.once());
+
+        const req = httpMocks.createRequest({
+            query: {
+                buyToken: fakeTakerRequest.buyToken,
+                sellToken: fakeTakerRequest.sellToken,
+                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                takerAddress: fakeTakerRequest.takerAddress,
+            }
+        });
+        const resp = httpMocks.createResponse();
+
+        await rfqmRequestHandler('indicative', quoter.object, req, resp);
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(indicativeQuote)));
+
+        quoter.verifyAll();
+    });
+    it('should handle empty indicative quote', async () => {
+        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+        quoter
+            .setup(async q => q.fetchRFQMIndicativeQuoteAsync(fakeTakerRequest))
+            .returns(async () => undefined)
+            .verifiable(TypeMoq.Times.once());
+
+        const req = httpMocks.createRequest({
+            query: {
+                buyToken: fakeTakerRequest.buyToken,
+                sellToken: fakeTakerRequest.sellToken,
+                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                takerAddress: fakeTakerRequest.takerAddress,
+            }
+        });
+        const resp = httpMocks.createResponse();
+
+        await rfqmRequestHandler('indicative', quoter.object, req, resp);
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.NO_CONTENT);
+
+        quoter.verifyAll();
+    });
+    it('should handle empty firm quote', async () => {
+        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+        quoter
+            .setup(async q => q.fetchRFQMFirmQuoteAsync(fakeTakerRequest))
+            .returns(async () => undefined)
+            .verifiable(TypeMoq.Times.once());
+
+        const req = httpMocks.createRequest({
+            query: {
+                buyToken: fakeTakerRequest.buyToken,
+                sellToken: fakeTakerRequest.sellToken,
+                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                takerAddress: fakeTakerRequest.takerAddress,
+            }
+        });
+        const resp = httpMocks.createResponse();
+
+        await rfqmRequestHandler('firm', quoter.object, req, resp);
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.NO_CONTENT);
+
+        quoter.verifyAll();
+    });
+    it('should invalidate a bad request', async () => {
+        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+
+        const req = httpMocks.createRequest({
+            query: {
+                sellToken: fakeTakerRequest.sellToken,
+                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                takerAddress: fakeTakerRequest.takerAddress,
+            }
+        });
+        const resp = httpMocks.createResponse();
+
+        await rfqmRequestHandler('firm', quoter.object, req, resp);
         expect(resp._getStatusCode()).to.eql(HttpStatus.BAD_REQUEST);
         const returnedData = resp._getJSONData();
         expect(Object.keys(returnedData)).to.eql(['errors']);
