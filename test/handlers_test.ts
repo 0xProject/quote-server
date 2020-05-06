@@ -137,6 +137,7 @@ describe('taker request handler', () => {
         const takerRequest = {
             ...fakeTakerRequest,
             canMakerControlSettlement: true,
+            apiKey: undefined,
         };
         quoter
             .setup(async q => q.fetchFirmQuoteAsync(takerRequest))
