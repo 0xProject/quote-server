@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "description": "RFQ Quote server",
     "main": "lib/src/index.js",
-    "typings": "lib/src/index.d.ts",
+    "types": "lib/src/index.d.ts",
     "author": "Steve Klebanoff, Fabio Berger",
     "license": "Apache-2.0",
     "private": true,
