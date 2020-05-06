@@ -32,4 +32,29 @@ export interface FirmQuote {
 export interface Quoter {
     fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuote | undefined>;
     fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuote | undefined>;
+    submitFillAsync(submitRequest: SubmitRequest): Promise<SubmitReceipt | undefined>;
+}
+
+export interface SubmitReceipt {
+    ethereumTransactionHash: string;
+    signedEthereumTransaction: string;
+}
+
+export interface SubmitRequest {
+    zeroExTransaction: ZeroExTransactionWithoutDomain;
+    signature: string;
+    apiKey?: string;
+}
+
+export interface SubmitRequestBody {
+    zeroExTransaction: ZeroExTransactionWithoutDomain;
+    signature: string;
+}
+
+export interface ZeroExTransactionWithoutDomain {
+    salt: BigNumber;
+    expirationTimeSeconds: BigNumber;
+    gasPrice: BigNumber;
+    signerAddress: string;
+    data: string;
 }

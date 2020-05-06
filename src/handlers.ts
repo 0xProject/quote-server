@@ -4,7 +4,7 @@ import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
-import { parseTakerRequest } from './request_parser';
+import { parseSubmitRequest, parseTakerRequest } from './request_parser';
 import { Quoter } from './types';
 
 export const generateApiKeyHandler = (): express.RequestHandler => {
@@ -43,6 +43,24 @@ export const takerRequestHandler = async (
             : quoter.fetchIndicativeQuoteAsync(takerRequest);
 
     const response = await responsePromise;
+    const result = response ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
+    return result.end();
+};
+
+export const submitRequestHandler = async (
+    quoter: Quoter,
+    req: express.Request,
+    res: express.Response,
+) => {
+    const submitRequestResponse = parseSubmitRequest(req);
+
+    if (!submitRequestResponse.isValid) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ errors: submitRequestResponse.errors });
+    }
+
+    const submitRequest = submitRequestResponse.submitRequest;
+    const response = await quoter.submitFillAsync(submitRequest);
+
     const result = response ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
     return result.end();
 };
