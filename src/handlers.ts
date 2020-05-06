@@ -12,7 +12,9 @@ export const generateApiKeyHandler = (): express.RequestHandler => {
         const query = req.query;
         const zeroExApiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
 
-        const isValid = query.canMakerControlSettlement || (!query.canMakerControlSettlement && zeroExApiKey && typeof zeroExApiKey === 'string');
+        const isValid =
+            query.canMakerControlSettlement ||
+            (!query.canMakerControlSettlement && zeroExApiKey && typeof zeroExApiKey === 'string');
         if (isValid) {
             next();
         } else {
@@ -47,11 +49,7 @@ export const takerRequestHandler = async (
     return result.end();
 };
 
-export const submitRequestHandler = async (
-    quoter: Quoter,
-    req: express.Request,
-    res: express.Response,
-) => {
+export const submitRequestHandler = async (quoter: Quoter, req: express.Request, res: express.Response) => {
     const submitRequestResponse = parseSubmitRequest(req);
 
     if (!submitRequestResponse.isValid) {

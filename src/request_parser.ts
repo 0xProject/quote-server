@@ -47,7 +47,6 @@ export const parseTakerRequest = (req: express.Request): ParsedTakerRequest => {
     };
 };
 
-
 type ParsedSubmitRequest = { isValid: true; submitRequest: SubmitRequest } | { isValid: false; errors: string[] };
 export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest => {
     const body = req.body;
