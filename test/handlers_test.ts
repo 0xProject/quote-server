@@ -90,7 +90,7 @@ describe('api key handler', () => {
 });
 
 describe('taker request handler', () => {
-    const fakeTakerRequest: TakerRequest = {
+    const fakeTakerRequest = {
         buyToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
         sellToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         buyAmount: new BigNumber(1000000000000000000),

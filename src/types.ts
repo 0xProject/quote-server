@@ -6,18 +6,29 @@ import { BigNumber } from '@0x/utils';
 type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T, Keys>> &
     { [K in Keys]-?: Required<Pick<T, K>> & Partial<Record<Exclude<Keys, K>, undefined>> }[Keys];
 
-export type TakerRequest = RequireOnlyOne<
+export type BuyOrSellAmount = RequireOnlyOne<
     {
-        sellToken: string;
-        buyToken: string;
-        takerAddress: string;
-        apiKey?: string;
-        canMakerControlSettlement?: boolean;
         sellAmount?: BigNumber;
         buyAmount?: BigNumber;
     },
     'sellAmount' | 'buyAmount'
 >;
+
+export type TakerRequestBase = BuyOrSellAmount & {
+    sellToken: string;
+    buyToken: string;
+    takerAddress: string;
+};
+
+export type RfqtRequest = TakerRequestBase & {
+    apiKey: string;
+};
+
+export type RfqmRequest = TakerRequestBase & {
+    canMakerControlSettlement: boolean;
+};
+
+export type TakerRequest = RfqtRequest | RfqmRequest;
 
 export type IndicativeQuote = Pick<
     SignedOrder,
