@@ -2,13 +2,13 @@ import * as express from 'express';
 import * as asyncHandler from 'express-async-handler';
 import * as HttpStatus from 'http-status-codes';
 
-import { generateApiKeyHandler, takerRequestHandler } from './handlers';
+import { generateApiKeyHandler, submitRequestHandler, takerRequestHandler } from './handlers';
 import { Quoter } from './types';
 
-export const serverRoutes = (allowedApiKeys: string[], quoteStrategy: Quoter) => {
+export const serverRoutes = (quoteStrategy: Quoter) => {
     const router = express.Router();
 
-    const apiKeyHandler = generateApiKeyHandler(allowedApiKeys);
+    const apiKeyHandler = generateApiKeyHandler();
     router.use(apiKeyHandler);
 
     router.get(
@@ -25,6 +25,12 @@ export const serverRoutes = (allowedApiKeys: string[], quoteStrategy: Quoter) =>
         '/quote',
         asyncHandler(async (req: express.Request, res: express.Response) =>
             takerRequestHandler('firm', quoteStrategy, req, res),
+        ),
+    );
+    router.post(
+        '/submit',
+        asyncHandler(async (req: express.Request, res: express.Response) =>
+            submitRequestHandler(quoteStrategy, req, res),
         ),
     );
     return router;
