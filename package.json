@@ -6,7 +6,6 @@
     "types": "lib/src/index.d.ts",
     "author": "Steve Klebanoff, Fabio Berger",
     "license": "Apache-2.0",
-    "private": true,
     "scripts": {
         "build": "tsc -b",
         "watch": "tsc --watch",
