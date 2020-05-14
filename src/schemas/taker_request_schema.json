@@ -1,31 +1,31 @@
 {
     "id": "/TakerRequestSchema",
     "properties": {
-        "sellToken": {
+        "sellTokenAddress": {
             "$ref": "/addressSchema"
         },
-        "buyToken": {
+        "buyTokenAddress": {
             "$ref": "/addressSchema"
         },
         "takerAddress": {
             "$ref": "/addressSchema"
         }
     },
-    "required": ["sellToken", "buyToken", "takerAddress"],
+    "required": ["sellTokenAddress", "buyTokenAddress", "takerAddress"],
     "oneOf": [
         {
-            "id": "sellAmount",
+            "id": "sellAmountBaseUnits",
             "properties": {
-                "sellAmount": { "$ref": "/wholeNumberSchema" }
+                "sellAmountBaseUnits": { "$ref": "/wholeNumberSchema" }
             },
-            "required": ["sellAmount"]
+            "required": ["sellAmountBaseUnits"]
         },
         {
-            "id": "buyAmount",
+            "id": "buyAmountBaseUnits",
             "properties": {
-                "buyAmount": { "$ref": "/wholeNumberSchema" }
+                "buyAmountBaseUnits": { "$ref": "/wholeNumberSchema" }
             },
-            "required": ["buyAmount"]
+            "required": ["buyAmountBaseUnits"]
         }
     ],
     "type": "object"

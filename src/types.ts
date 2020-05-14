@@ -8,15 +8,15 @@ type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T
 
 export type TakerRequest = RequireOnlyOne<
     {
-        sellToken: string;
-        buyToken: string;
+        sellTokenAddress: string;
+        buyTokenAddress: string;
         takerAddress: string;
         apiKey?: string;
         canMakerControlSettlement?: boolean;
-        sellAmount?: BigNumber;
-        buyAmount?: BigNumber;
+        sellAmountBaseUnits?: BigNumber;
+        buyAmountBaseUnits?: BigNumber;
     },
-    'sellAmount' | 'buyAmount'
+    'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
 
 export type IndicativeQuote = Pick<

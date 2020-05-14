@@ -1,3 +1,3 @@
 export { SignedOrder } from '@0x/order-utils';
 export { serverRoutes } from './router';
-export { TakerRequest, IndicativeQuote, Quoter } from './types';
+export { FirmQuote, TakerRequest, IndicativeQuote, Quoter } from './types';
