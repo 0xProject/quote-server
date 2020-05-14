@@ -1,0 +1,20 @@
+[
+    {
+        "version": "0.1.0",
+        "changes": [
+            {
+                "note": "Initial release",
+                "pr": 1
+            }
+        ]
+    },
+    {
+        "version": "0.0.1",
+        "changes": [
+            {
+                "note": "Initial release",
+                "pr": 1
+            }
+        ]
+    }
+]
