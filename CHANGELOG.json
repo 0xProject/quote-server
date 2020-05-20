@@ -1,5 +1,14 @@
 [
     {
+        "version": "0.1.1",
+        "changes": [
+            {
+                "note": "Add missing exports SubmitRequest and SubmitReceipt",
+                "pr": 5
+            }
+        ]
+    },
+    {
         "version": "0.1.0",
         "changes": [
             {
