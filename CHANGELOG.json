@@ -3,8 +3,8 @@
         "version": "0.1.0",
         "changes": [
             {
-                "note": "Initial release",
-                "pr": 1
+                "note": "renamed some TakerRequest parameters",
+                "pr": 5
             }
         ]
     },
