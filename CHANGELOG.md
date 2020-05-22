@@ -3,6 +3,7 @@
 ## 1.0.0
 
 -   Bumped version number for previous breaking changes, which should have bumped it itself, but didn't.
+-   Promoted @types/express from devDependencies to dependencies in package.json
 
 ## 0.1.1
 
