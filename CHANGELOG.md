@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.0.1
+
+-   Changed some types: FirmQuote's quoteExpiry field is now optional, and IndicativeQuote now has an (also optional) quoteExpiry as well.
+
 ## 1.0.0
 
 -   Bumped version number for previous breaking changes, which should have bumped it itself, but didn't.

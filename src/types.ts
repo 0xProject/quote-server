@@ -19,15 +19,26 @@ export type TakerRequest = RequireOnlyOne<
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
 
-export type IndicativeQuote = Pick<
+export type RFQTIndicativeQuote = Pick<
     SignedOrder,
     'makerAssetData' | 'makerAssetAmount' | 'takerAssetData' | 'takerAssetAmount' | 'expirationTimeSeconds'
 >;
 
-export interface FirmQuote {
-    signedOrder: SignedOrder;
-    quoteExpiry: number; // If RFQT order, simply set to order expiry
+export interface RFQMIndicativeQuote extends RFQTIndicativeQuote {
+    quoteExpiry: number;
 }
+
+export type IndicativeQuote = RFQTIndicativeQuote | RFQMIndicativeQuote;
+
+export interface RFQTFirmQuote {
+    signedOrder: SignedOrder;
+}
+
+export interface RFQMFirmQuote extends RFQTFirmQuote {
+    quoteExpiry: number;
+}
+
+export type FirmQuote = RFQTFirmQuote | RFQMFirmQuote;
 
 export interface Quoter {
     fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuote | undefined>;
