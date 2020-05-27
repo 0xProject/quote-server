@@ -24,9 +24,11 @@ export type RFQTIndicativeQuote = Pick<
     'makerAssetData' | 'makerAssetAmount' | 'takerAssetData' | 'takerAssetAmount' | 'expirationTimeSeconds'
 >;
 
-export interface RFQMIndicativeQuote extends RFQTIndicativeQuote {
+export interface RFQMQuoteExpiryPartial {
     quoteExpiry: number;
 }
+
+export interface RFQMIndicativeQuote extends RFQTIndicativeQuote, RFQMQuoteExpiryPartial {}
 
 export type IndicativeQuote = RFQTIndicativeQuote | RFQMIndicativeQuote;
 
@@ -34,9 +36,7 @@ export interface RFQTFirmQuote {
     signedOrder: SignedOrder;
 }
 
-export interface RFQMFirmQuote extends RFQTFirmQuote {
-    quoteExpiry: number;
-}
+export interface RFQMFirmQuote extends RFQTFirmQuote, RFQMQuoteExpiryPartial {}
 
 export type FirmQuote = RFQTFirmQuote | RFQMFirmQuote;
 
