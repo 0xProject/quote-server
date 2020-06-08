@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.0.2
+
+-  Exported RFQT- and RFQ-M specific quote types.
+
 ## 2.0.1
 
 -   Changed some types: FirmQuote's quoteExpiry field is now optional, and IndicativeQuote now has an (also optional) quoteExpiry as well.
