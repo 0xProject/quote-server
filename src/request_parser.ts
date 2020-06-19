@@ -27,16 +27,16 @@ export const parseTakerRequest = (req: express.Request): ParsedTakerRequest => {
             canMakerControlSettlement = undefined;
         }
         const takerRequestBase = {
-            sellToken: query.sellToken,
-            buyToken: query.buyToken,
+            sellTokenAddress: query.sellTokenAddress,
+            buyTokenAddress: query.buyTokenAddress,
             apiKey,
             takerAddress: query.takerAddress,
             canMakerControlSettlement,
         };
 
-        const takerRequest: TakerRequest = query.sellAmount
-            ? { ...takerRequestBase, sellAmount: new BigNumber(query.sellAmount) }
-            : { ...takerRequestBase, buyAmount: new BigNumber(query.buyAmount) };
+        const takerRequest: TakerRequest = query.sellAmountBaseUnits
+            ? { ...takerRequestBase, sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits) }
+            : { ...takerRequestBase, buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits) };
         return { isValid: true, takerRequest };
     }
 

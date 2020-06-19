@@ -91,9 +91,9 @@ describe('api key handler', () => {
 
 describe('taker request handler', () => {
     const fakeTakerRequest: TakerRequest = {
-        buyToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
-        sellToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-        buyAmount: new BigNumber(1000000000000000000),
+        buyTokenAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
+        sellTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        buyAmountBaseUnits: new BigNumber(1000000000000000000),
         takerAddress: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
         apiKey: 'kool-api-key',
         canMakerControlSettlement: undefined,
@@ -112,9 +112,9 @@ describe('taker request handler', () => {
 
         const req = httpMocks.createRequest({
             query: {
-                buyToken: fakeTakerRequest.buyToken,
-                sellToken: fakeTakerRequest.sellToken,
-                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                buyTokenAddress: fakeTakerRequest.buyTokenAddress,
+                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeTakerRequest.apiKey },
@@ -146,9 +146,9 @@ describe('taker request handler', () => {
 
         const req = httpMocks.createRequest({
             query: {
-                buyToken: takerRequest.buyToken,
-                sellToken: takerRequest.sellToken,
-                buyAmount: takerRequest.buyAmount.toString(),
+                buyTokenAddress: takerRequest.buyTokenAddress,
+                sellTokenAddress: takerRequest.sellTokenAddress,
+                buyAmountBaseUnits: takerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: takerRequest.takerAddress,
                 canMakerControlSettlement: takerRequest.canMakerControlSettlement,
             },
@@ -180,9 +180,9 @@ describe('taker request handler', () => {
 
         const req = httpMocks.createRequest({
             query: {
-                buyToken: fakeTakerRequest.buyToken,
-                sellToken: fakeTakerRequest.sellToken,
-                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                buyTokenAddress: fakeTakerRequest.buyTokenAddress,
+                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeTakerRequest.apiKey },
@@ -205,9 +205,9 @@ describe('taker request handler', () => {
 
         const req = httpMocks.createRequest({
             query: {
-                buyToken: fakeTakerRequest.buyToken,
-                sellToken: fakeTakerRequest.sellToken,
-                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                buyTokenAddress: fakeTakerRequest.buyTokenAddress,
+                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeTakerRequest.apiKey },
@@ -229,9 +229,9 @@ describe('taker request handler', () => {
 
         const req = httpMocks.createRequest({
             query: {
-                buyToken: fakeTakerRequest.buyToken,
-                sellToken: fakeTakerRequest.sellToken,
-                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                buyTokenAddress: fakeTakerRequest.buyTokenAddress,
+                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeTakerRequest.apiKey },
@@ -249,8 +249,8 @@ describe('taker request handler', () => {
 
         const req = httpMocks.createRequest({
             query: {
-                sellToken: fakeTakerRequest.sellToken,
-                buyAmount: fakeTakerRequest.buyAmount.toString(),
+                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeTakerRequest.apiKey },
@@ -262,7 +262,7 @@ describe('taker request handler', () => {
         const returnedData = resp._getJSONData();
         expect(Object.keys(returnedData)).to.eql(['errors']);
         expect(returnedData.errors.length).to.eql(1);
-        expect(returnedData.errors[0]).to.eql('instance requires property "buyToken"');
+        expect(returnedData.errors[0]).to.eql('instance requires property "buyTokenAddress"');
     });
 });
 
