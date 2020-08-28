@@ -34,6 +34,10 @@ export const parseTakerRequest = (req: express.Request): ParsedTakerRequest => {
             canMakerControlSettlement,
         };
 
+        if (req.path === '/quote' && query.takerAddress === undefined) {
+            return { isValid: false, errors: ['Firm quotes require a takerAddress'] };
+        }
+
         const takerRequest: TakerRequest = query.sellAmountBaseUnits
             ? { ...takerRequestBase, sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits) }
             : { ...takerRequestBase, buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits) };

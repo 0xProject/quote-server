@@ -10,7 +10,7 @@ export type TakerRequest = RequireOnlyOne<
     {
         sellTokenAddress: string;
         buyTokenAddress: string;
-        takerAddress: string;
+        takerAddress?: string; // required for /quote but not for /price
         apiKey?: string;
         canMakerControlSettlement?: boolean;
         sellAmountBaseUnits?: BigNumber;
