@@ -20,6 +20,21 @@ export type TakerRequest = RequireOnlyOne<
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
 
+export type TakerRequestQueryParams = RequireOnlyOne<
+    {
+        // export interface TakerRequestQueryParams {
+        sellTokenAddress: string;
+        buyTokenAddress: string;
+        takerAddress: string;
+        sellAmountBaseUnits?: string;
+        buyAmountBaseUnits?: string;
+        comparisonPrice?: string;
+        canMakerControlSettlement?: string;
+        // };
+    },
+    'sellAmountBaseUnits' | 'buyAmountBaseUnits'
+>;
+
 export type RFQTIndicativeQuote = Pick<
     SignedOrder,
     'makerAssetData' | 'makerAssetAmount' | 'takerAssetData' | 'takerAssetAmount' | 'expirationTimeSeconds'

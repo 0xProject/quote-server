@@ -4,8 +4,8 @@ import * as chai from 'chai';
 import * as HttpStatus from 'http-status-codes';
 import * as httpMocks from 'node-mocks-http';
 import * as TypeMoq from 'typemoq';
-import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
 
+import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
 import { generateApiKeyHandler, submitRequestHandler, takerRequestHandler } from '../src/handlers';
 import { parseTakerRequest } from '../src/request_parser';
 import { Quoter, SubmitRequest, TakerRequest } from '../src/types';
@@ -44,12 +44,12 @@ describe('parseTakerRequest', () => {
         const request = {
             query,
             headers: {
-                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo'
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
-
         };
         const parsedRequest = parseTakerRequest(request);
         if (parsedRequest.isValid && parsedRequest.takerRequest.comparisonPrice) {
+            // tslint:disable-next-line: custom-no-magic-numbers
             expect(parsedRequest.takerRequest.comparisonPrice.toNumber()).to.eql(320.12);
         } else {
             expect.fail('Parsed request is not valid or comparisonPrice was not parsed correctly');
@@ -67,7 +67,7 @@ describe('parseTakerRequest', () => {
         const request = {
             query,
             headers: {
-                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo'
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
         };
         const parsedRequest = parseTakerRequest(request);
@@ -84,7 +84,7 @@ describe('parseTakerRequest', () => {
         const request = {
             query,
             headers: {
-                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo'
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
         };
         const parsedRequest = parseTakerRequest(request);
@@ -93,7 +93,7 @@ describe('parseTakerRequest', () => {
         } else {
             expect.fail('Parsed request is not valid');
         }
-    })
+    });
 });
 
 describe('api key handler', () => {
@@ -217,7 +217,7 @@ describe('taker request handler', () => {
                 sellTokenAddress: takerRequest.sellTokenAddress,
                 buyAmountBaseUnits: takerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: takerRequest.takerAddress,
-                canMakerControlSettlement: takerRequest.canMakerControlSettlement,
+                canMakerControlSettlement: takerRequest.canMakerControlSettlement.toString(),
             },
         });
         const resp = httpMocks.createResponse();
