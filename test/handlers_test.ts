@@ -1,11 +1,13 @@
 import { SignedOrder } from '@0x/order-utils';
-import { BigNumber } from '@0x/utils';
+import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as chai from 'chai';
 import * as HttpStatus from 'http-status-codes';
 import * as httpMocks from 'node-mocks-http';
 import * as TypeMoq from 'typemoq';
+import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
 
 import { generateApiKeyHandler, submitRequestHandler, takerRequestHandler } from '../src/handlers';
+import { parseTakerRequest } from '../src/request_parser';
 import { Quoter, SubmitRequest, TakerRequest } from '../src/types';
 
 const expect = chai.expect;
@@ -29,6 +31,70 @@ const fakeOrder: SignedOrder = {
     takerFeeAssetData: '0xabc',
     signature: 'fakeSignature',
 };
+
+describe('parseTakerRequest', () => {
+    it('should handle an optional comparisonPrice', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+            comparisonPrice: '320.12',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo'
+            },
+
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (parsedRequest.isValid && parsedRequest.takerRequest.comparisonPrice) {
+            expect(parsedRequest.takerRequest.comparisonPrice.toNumber()).to.eql(320.12);
+        } else {
+            expect.fail('Parsed request is not valid or comparisonPrice was not parsed correctly');
+        }
+    });
+
+    it('should fail validation with an invalid comparison price', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+            comparisonPrice: 'three twenty',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo'
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        expect(parsedRequest.isValid).to.eql(false);
+    });
+
+    it('should still validate without a comparison price', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo'
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (parsedRequest.isValid) {
+            expect(parsedRequest.takerRequest.comparisonPrice).to.eql(undefined);
+        } else {
+            expect.fail('Parsed request is not valid');
+        }
+    })
+});
 
 describe('api key handler', () => {
     it('reject when canMakerControlSettlement == false & no API key specified', () => {
@@ -97,6 +163,7 @@ describe('taker request handler', () => {
         takerAddress: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
         apiKey: 'kool-api-key',
         canMakerControlSettlement: undefined,
+        comparisonPrice: undefined,
     };
 
     it('should defer to quoter and return response for firm quote', async () => {

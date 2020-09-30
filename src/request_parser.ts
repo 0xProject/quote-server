@@ -8,7 +8,8 @@ import * as takerRequestSchema from './schemas/taker_request_schema.json';
 import { SubmitRequest, TakerRequest } from './types';
 
 type ParsedTakerRequest = { isValid: true; takerRequest: TakerRequest } | { isValid: false; errors: string[] };
-export const parseTakerRequest = (req: express.Request): ParsedTakerRequest => {
+
+export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'>): ParsedTakerRequest => {
     const query = req.query;
 
     // Create schema validator
@@ -32,6 +33,7 @@ export const parseTakerRequest = (req: express.Request): ParsedTakerRequest => {
             apiKey,
             takerAddress: query.takerAddress,
             canMakerControlSettlement,
+            comparisonPrice: query.comparisonPrice ? new BigNumber(query.comparisonPrice) : undefined,
         };
 
         const takerRequest: TakerRequest = query.sellAmountBaseUnits

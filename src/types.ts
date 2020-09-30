@@ -15,6 +15,7 @@ export type TakerRequest = RequireOnlyOne<
         canMakerControlSettlement?: boolean;
         sellAmountBaseUnits?: BigNumber;
         buyAmountBaseUnits?: BigNumber;
+        comparisonPrice?: BigNumber;
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
