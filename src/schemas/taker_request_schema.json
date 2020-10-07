@@ -9,6 +9,9 @@
         },
         "takerAddress": {
             "$ref": "/addressSchema"
+        },
+        "comparisonPrice": {
+            "$ref": "/numberSchema"
         }
     },
     "required": ["sellTokenAddress", "buyTokenAddress", "takerAddress"],

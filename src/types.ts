@@ -15,6 +15,22 @@ export type TakerRequest = RequireOnlyOne<
         canMakerControlSettlement?: boolean;
         sellAmountBaseUnits?: BigNumber;
         buyAmountBaseUnits?: BigNumber;
+        comparisonPrice?: BigNumber;
+    },
+    'sellAmountBaseUnits' | 'buyAmountBaseUnits'
+>;
+
+export type TakerRequestQueryParams = RequireOnlyOne<
+    {
+        // export interface TakerRequestQueryParams {
+        sellTokenAddress: string;
+        buyTokenAddress: string;
+        takerAddress: string;
+        sellAmountBaseUnits?: string;
+        buyAmountBaseUnits?: string;
+        comparisonPrice?: string;
+        canMakerControlSettlement?: string;
+        // };
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;

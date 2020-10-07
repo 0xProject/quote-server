@@ -5,11 +5,12 @@ import * as express from 'express';
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
 import * as submitRequestSchema from './schemas/submit_request_schema.json';
 import * as takerRequestSchema from './schemas/taker_request_schema.json';
-import { SubmitRequest, TakerRequest } from './types';
+import { SubmitRequest, TakerRequest, TakerRequestQueryParams } from './types';
 
 type ParsedTakerRequest = { isValid: true; takerRequest: TakerRequest } | { isValid: false; errors: string[] };
-export const parseTakerRequest = (req: express.Request): ParsedTakerRequest => {
-    const query = req.query;
+
+export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'>): ParsedTakerRequest => {
+    const query: TakerRequestQueryParams = req.query;
 
     // Create schema validator
     const schemaValidator = new SchemaValidator();
@@ -22,21 +23,34 @@ export const parseTakerRequest = (req: express.Request): ParsedTakerRequest => {
         if (typeof apiKey !== 'string') {
             apiKey = undefined;
         }
-        let canMakerControlSettlement = query.canMakerControlSettlement;
-        if (typeof canMakerControlSettlement !== 'boolean') {
-            canMakerControlSettlement = undefined;
-        }
+
+        // Querystring values are always returned as strings, therefore a boolean must be parsed as string.
+        const canMakerControlSettlement = query.canMakerControlSettlement === 'true' ? true : undefined;
         const takerRequestBase = {
             sellTokenAddress: query.sellTokenAddress,
             buyTokenAddress: query.buyTokenAddress,
             apiKey,
             takerAddress: query.takerAddress,
             canMakerControlSettlement,
+            comparisonPrice: query.comparisonPrice ? new BigNumber(query.comparisonPrice) : undefined,
         };
 
-        const takerRequest: TakerRequest = query.sellAmountBaseUnits
-            ? { ...takerRequestBase, sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits) }
-            : { ...takerRequestBase, buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits) };
+        let takerRequest: TakerRequest;
+        if (query.sellAmountBaseUnits !== undefined && query.buyAmountBaseUnits === undefined) {
+            takerRequest = {
+                ...takerRequestBase,
+                sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
+            };
+        } else if (query.buyAmountBaseUnits !== undefined && query.sellAmountBaseUnits === undefined) {
+            takerRequest = {
+                ...takerRequestBase,
+                buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
+            };
+        } else {
+            throw new Error(
+                'A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).',
+            );
+        }
         return { isValid: true, takerRequest };
     }
 
