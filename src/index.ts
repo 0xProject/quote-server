@@ -11,4 +11,5 @@ export {
     Quoter,
     SubmitReceipt,
     SubmitRequest,
+    TakerRequestQueryParams,
 } from './types';

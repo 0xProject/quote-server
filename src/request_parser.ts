@@ -36,18 +36,20 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
         };
 
         let takerRequest: TakerRequest;
-        if (query.sellAmountBaseUnits) {
+        if (query.sellAmountBaseUnits !== undefined && query.buyAmountBaseUnits === undefined) {
             takerRequest = {
                 ...takerRequestBase,
                 sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
             };
-        } else if (query.buyAmountBaseUnits) {
+        } else if (query.buyAmountBaseUnits !== undefined && query.sellAmountBaseUnits === undefined) {
             takerRequest = {
                 ...takerRequestBase,
                 buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
             };
         } else {
-            throw new Error('"buyAmountBaseUnits" and "sellAmountBaseUnits" are mutually exclusive');
+            throw new Error(
+                'A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).',
+            );
         }
         return { isValid: true, takerRequest };
     }
