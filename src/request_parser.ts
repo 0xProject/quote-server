@@ -33,6 +33,8 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             takerAddress: query.takerAddress,
             canMakerControlSettlement,
             comparisonPrice: query.comparisonPrice ? new BigNumber(query.comparisonPrice) : undefined,
+            txOrigin: query.txOrigin,
+            prtocolVersion: query.protocolVersion,
         };
 
         let takerRequest: TakerRequest;

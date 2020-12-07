@@ -16,6 +16,8 @@ export type TakerRequest = RequireOnlyOne<
         sellAmountBaseUnits?: BigNumber;
         buyAmountBaseUnits?: BigNumber;
         comparisonPrice?: BigNumber;
+        txOrigin?: string;
+        protocolVersion?: string;
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
@@ -30,6 +32,8 @@ export type TakerRequestQueryParams = RequireOnlyOne<
         buyAmountBaseUnits?: string;
         comparisonPrice?: string;
         canMakerControlSettlement?: string;
+        txOrigin?: string;
+        protocolVersion?: string;
         // };
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
