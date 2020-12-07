@@ -164,6 +164,8 @@ describe('taker request handler', () => {
         apiKey: 'kool-api-key',
         canMakerControlSettlement: undefined,
         comparisonPrice: undefined,
+        protocolVersion: undefined,
+        txOrigin: undefined,
     };
 
     it('should defer to quoter and return response for firm quote', async () => {
