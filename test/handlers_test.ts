@@ -94,6 +94,77 @@ describe('parseTakerRequest', () => {
             expect.fail('Parsed request is not valid');
         }
     });
+
+    it('should default to v3 requests', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (parsedRequest.isValid) {
+            expect(parsedRequest.takerRequest.protocolVersion).to.eql('3');
+        } else {
+            expect.fail('Parsed request is not valid');
+        }
+    });
+
+    it('should handle requests where v4 is specified', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+            protocolVersion: '4',
+            txOrigin: NULL_ADDRESS,
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (parsedRequest.isValid) {
+            if (parsedRequest.takerRequest.protocolVersion === '4') {
+                expect(parsedRequest.takerRequest.txOrigin === NULL_ADDRESS);
+            } else {
+                expect.fail('Returned protocol version is not 4');
+            }
+
+        } else {
+            expect.fail('Parsed request is not valid');
+        }
+    });
+
+    it('should fail v4 requests where txOrigin is not specified', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+            protocolVersion: '4',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (!parsedRequest.isValid) {
+            expect(parsedRequest.errors).to.eql('v4 request must specify txOrigin');
+        } else {
+            expect.fail('request should have failed');
+        }
+    });
 });
 
 describe('api key handler', () => {
@@ -164,15 +235,17 @@ describe('taker request handler', () => {
         apiKey: 'kool-api-key',
         canMakerControlSettlement: undefined,
         comparisonPrice: undefined,
-        protocolVersion: undefined,
-        txOrigin: undefined,
+        protocolVersion: '3',
     };
 
     it('should defer to quoter and return response for firm quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         const expectedResponse = {
-            signedOrder: fakeOrder,
-            quoteExpiry: +new Date(),
+            response: {
+                signedOrder: fakeOrder,
+                quoteExpiry: +new Date(),
+            },
+            protocolVersion: '3',
         };
         quoter
             .setup(async q => q.fetchFirmQuoteAsync(fakeTakerRequest))
