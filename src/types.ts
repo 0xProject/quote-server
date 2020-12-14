@@ -46,34 +46,6 @@ export type TakerRequestQueryParams = RequireOnlyOne<
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
 
-// Start suggested changes here
-
-/*
-
-🚨 Made some simplifications: when we built the first iteration of `quote-server`, we thought that RFQM was
-round the corner. Since then, we have 1) decided to de-prioritize RFQM in the near future, and 2) we have decided to
-change the logic behind the way we do RFQM (which is what we call 'Last Look RFQM'). Therefore I took the freedom to
-strip out `quoteExpiry` from the types and remove the RFQM types since this field has never been used and no market maker
-uses it at all.
-
-✅ Used generics: One way to avoid creating every possible conbination of version and response type (Indicative or Firm) is
-to create a generic. this generic can be used like `VersionedQuote<'4', V3RFQTIndicativeQuote>` to dynamically
-build the following interface.
-
-{
-    protocolVersion: '4',
-    response: {
-        makerToken: ...,
-        takerToken: ...,
-        makerAmount: ...,
-        takerAmount: ...,
-        expiry: ...,
-    }
-}
-
-*/
-
-
 export interface VersionedQuote<Version, QuoteType> {
     protocolVersion: Version;
     response: QuoteType | undefined;
@@ -82,8 +54,7 @@ export interface VersionedQuote<Version, QuoteType> {
 /*
 // Indicative Quotes
 
-Generate types for both V3 and V4 Indicative quotes. Then use the generic to tie them all together. Removing
-RFQM definitely makes things a lot easier.
+Generate types for both V3 and V4 Indicative quotes. Then use the generic to tie them all together.
 */
 export type V3RFQIndicativeQuote = Pick<
     V3SignedOrder,
@@ -97,13 +68,7 @@ export type V4RFQIndicativeQuote = Pick<
 
 type IndicativeQuoteResponse = VersionedQuote<'3', V3RFQIndicativeQuote> | VersionedQuote<'4', V4RFQIndicativeQuote> | undefined;
 
-/*
-// Firm quotes
-
-Same here, tie again different firm quote implementations. I like the approach you took with separating
-order and signature in V4 RFQ 💯.
-
-*/
+// Firm quotes, similar pattern
 export interface V3RFQFirmQuote {
     signedOrder: V3SignedOrder;
 }
@@ -115,7 +80,7 @@ export interface V4RFQFirmQuote {
 
 type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote> | undefined;
 
-// Implement
+// Implement quoter that is type agnostic
 export interface Quoter {
     fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuoteResponse>;
     fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuoteResponse>;
