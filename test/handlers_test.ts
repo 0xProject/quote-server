@@ -1,5 +1,5 @@
 import { SignedOrder } from '@0x/order-utils';
-import { BigNumber, NULL_ADDRESS } from '@0x/utils';
+import { BigNumber, logUtils, NULL_ADDRESS } from '@0x/utils';
 import * as chai from 'chai';
 import * as HttpStatus from 'http-status-codes';
 import * as httpMocks from 'node-mocks-http';
@@ -158,11 +158,13 @@ describe('parseTakerRequest', () => {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
         };
-        const parsedRequest = parseTakerRequest(request);
-        if (!parsedRequest.isValid) {
-            expect(parsedRequest.errors).to.eql('v4 request must specify txOrigin');
-        } else {
+
+        try {
+            const parsedRequest = parseTakerRequest(request);
+            logUtils.log(parsedRequest);
             expect.fail('request should have failed');
+        } catch (e) {
+            expect(e.message).to.eql('v4 request must specify txOrigin');
         }
     });
 });
@@ -255,6 +257,7 @@ describe('taker request handler', () => {
             query: {
                 buyTokenAddress: fakeTakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                // tslint:disable-next-line: no-non-null-assertion
                 buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
@@ -291,6 +294,7 @@ describe('taker request handler', () => {
             query: {
                 buyTokenAddress: takerRequest.buyTokenAddress,
                 sellTokenAddress: takerRequest.sellTokenAddress,
+                // tslint:disable-next-line:no-non-null-assertion
                 buyAmountBaseUnits: takerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: takerRequest.takerAddress,
                 canMakerControlSettlement: takerRequest.canMakerControlSettlement.toString(),
@@ -328,6 +332,7 @@ describe('taker request handler', () => {
             query: {
                 buyTokenAddress: fakeTakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                // tslint:disable-next-line: no-non-null-assertion
                 buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
@@ -353,6 +358,7 @@ describe('taker request handler', () => {
             query: {
                 buyTokenAddress: fakeTakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                // tslint:disable-next-line:no-non-null-assertion
                 buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
@@ -377,6 +383,7 @@ describe('taker request handler', () => {
             query: {
                 buyTokenAddress: fakeTakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                // tslint:disable-next-line:no-non-null-assertion
                 buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
@@ -396,6 +403,7 @@ describe('taker request handler', () => {
         const req = httpMocks.createRequest({
             query: {
                 sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                // tslint:disable-next-line:no-non-null-assertion
                 buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeTakerRequest.takerAddress,
             },
