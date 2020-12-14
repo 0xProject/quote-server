@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
 import { generateApiKeyHandler, submitRequestHandler, takerRequestHandler } from '../src/handlers';
 import { parseTakerRequest } from '../src/request_parser';
-import { Quoter, SubmitRequest, TakerRequest, V3IndicativeQuote, V3RFQFirmQuote, V3RFQTIndicativeQuote, VersionedQuote } from '../src/types';
+import { Quoter, SubmitRequest, TakerRequest, V3RFQFirmQuote, V3RFQTIndicativeQuote, VersionedQuote } from '../src/types';
 
 const expect = chai.expect;
 
@@ -243,7 +243,6 @@ describe('taker request handler', () => {
         const expectedResponse: VersionedQuote<'3', V3RFQFirmQuote> = {
             response: {
                 signedOrder: fakeOrder,
-                quoteExpiry: +new Date(),
             },
             protocolVersion: '3',
         };
@@ -275,7 +274,6 @@ describe('taker request handler', () => {
         const expectedResponse: VersionedQuote<'3', V3RFQFirmQuote> = {
             response: {
                 signedOrder: fakeOrder,
-                quoteExpiry: +new Date(),
             },
             protocolVersion: '3',
         };

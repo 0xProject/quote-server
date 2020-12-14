@@ -46,6 +46,14 @@ export type TakerRequestQueryParams = RequireOnlyOne<
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
 
+// Generic VersionedQuote
+export interface VersionedQuote<Version, QuoteType> {
+    protocolVersion: Version;
+    response: QuoteType | undefined;
+}
+
+
+// Indicative Quotes
 export type V3RFQTIndicativeQuote = Pick<
     V3SignedOrder,
     'makerAssetData' | 'makerAssetAmount' | 'takerAssetData' | 'takerAssetAmount' | 'expirationTimeSeconds'
@@ -56,36 +64,21 @@ export type V4RFQTIndicativeQuote = Pick<
     'makerToken' | 'makerAmount' | 'takerToken' | 'takerAmount' | 'expiry'
 >;
 
-export interface V3RFQMIndicativeQuote extends V3RFQTIndicativeQuote {
-    quoteExpiry: number;
-}
+type IndicativeQuote = VersionedQuote<'3', V3RFQTIndicativeQuote> | VersionedQuote<'4', V4RFQTIndicativeQuote> | undefined;
 
-export interface V4RFQMIndicativeQuote extends V4RFQTIndicativeQuote {
-    quoteExpiry: number;
-}
-
-export type V3IndicativeQuote = V3RFQTIndicativeQuote | V3RFQMIndicativeQuote;
-export type V4IndicativeQuote = V4RFQTIndicativeQuote | V4RFQMIndicativeQuote;
-
+// Firm quotes
 export interface V3RFQFirmQuote {
     signedOrder: V3SignedOrder;
-    quoteExpiry?: number;
 }
 
 export interface V4RFQFirmQuote {
     order: V4RfqOrder;
     signature: V4Signature;
-    quoteExpiry?: number;
 }
 
-export interface VersionedQuote<Version, QuoteType> {
-    protocolVersion: Version;
-    response: QuoteType | undefined;
-}
-
-type IndicativeQuote = VersionedQuote<'3', V3RFQTIndicativeQuote> | VersionedQuote<'4', V4RFQTIndicativeQuote> | undefined;
 type FirmQuote = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote> | undefined;
 
+// Implement
 export interface Quoter {
     fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuote>;
     fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuote>;
