@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
 import { generateApiKeyHandler, submitRequestHandler, takerRequestHandler } from '../src/handlers';
 import { parseTakerRequest } from '../src/request_parser';
-import { Quoter, SubmitRequest, TakerRequest, V3RFQFirmQuote, V3RFQTIndicativeQuote, VersionedQuote } from '../src/types';
+import { Quoter, SubmitRequest, TakerRequest, V3RFQFirmQuote, V3RFQIndicativeQuote, VersionedQuote } from '../src/types';
 
 const expect = chai.expect;
 
@@ -309,7 +309,7 @@ describe('taker request handler', () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
 
         const { makerAssetData, makerAssetAmount, takerAssetAmount, takerAssetData, expirationTimeSeconds } = fakeOrder;
-        const indicativeQuote: VersionedQuote<'3', V3RFQTIndicativeQuote> = {
+        const indicativeQuote: VersionedQuote<'3', V3RFQIndicativeQuote> = {
             protocolVersion: '3',
             response: {
                 makerAssetData,
