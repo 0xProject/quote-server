@@ -29,7 +29,7 @@ export interface V4TakerRequest extends BaseTakerRequest {
     txOrigin: string;
 }
 
-export type TakerRequest = V3TakerRequest | V4TakerRequest;;
+export type TakerRequest = V3TakerRequest | V4TakerRequest;
 
 export type TakerRequestQueryParams = RequireOnlyOne<
     {
@@ -67,49 +67,28 @@ export interface V4RFQMIndicativeQuote extends V4RFQTIndicativeQuote {
 export type V3IndicativeQuote = V3RFQTIndicativeQuote | V3RFQMIndicativeQuote;
 export type V4IndicativeQuote = V4RFQTIndicativeQuote | V4RFQMIndicativeQuote;
 
-export interface V3RFQTFirmQuote {
+export interface V3RFQFirmQuote {
     signedOrder: V3SignedOrder;
+    quoteExpiry?: number;
 }
 
-export interface V4RFQTFirmQuote {
+export interface V4RFQFirmQuote {
     order: V4RfqOrder;
     signature: V4Signature;
+    quoteExpiry?: number;
 }
 
-export interface V3RFQMFirmQuote extends V3RFQTFirmQuote {
-    quoteExpiry: number;
+export interface VersionedQuote<Version, QuoteType> {
+    protocolVersion: Version;
+    response: QuoteType | undefined;
 }
 
-export interface V4RFQMFirmQuote extends V4RFQTFirmQuote {
-    quoteExpiry: number;
-}
-
-export type V3FirmQuote = V3RFQTFirmQuote | V3RFQMFirmQuote;
-export type V4FirmQuote = V4RFQTFirmQuote | V4RFQMFirmQuote;
-
-export interface V3VersionedIndicativeQuote {
-    protocolVersion: '3';
-    response: V3IndicativeQuote | undefined;
-}
-
-export interface V4VersionedIndicativeQuote {
-    protocolVersion: '4';
-    response: V4IndicativeQuote | undefined;
-}
-
-export interface V3VersionedFirmQuote {
-    protocolVersion: '3';
-    response: V3FirmQuote | undefined;
-}
-
-export interface V4VersionedFirmQuote {
-    protocolVersion: '4';
-    response: V4FirmQuote | undefined;
-}
+type IndicativeQuote = VersionedQuote<'3', V3RFQTIndicativeQuote> | VersionedQuote<'4', V4RFQTIndicativeQuote> | undefined;
+type FirmQuote = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote> | undefined;
 
 export interface Quoter {
-    fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<V3VersionedIndicativeQuote | V4VersionedIndicativeQuote | undefined>;
-    fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<V3VersionedFirmQuote | V4VersionedFirmQuote | undefined>;
+    fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuote>;
+    fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuote>;
     submitFillAsync(submitRequest: SubmitRequest): Promise<SubmitReceipt | undefined>;
 }
 
