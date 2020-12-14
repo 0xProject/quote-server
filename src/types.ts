@@ -29,7 +29,7 @@ export interface V4TakerRequest extends BaseTakerRequest {
     txOrigin: string;
 }
 
-export type TakerRequest = V3TakerRequest | V4TakerRequest;;
+export type TakerRequest = V3TakerRequest | V4TakerRequest;
 
 export type TakerRequestQueryParams = RequireOnlyOne<
     {
@@ -46,70 +46,79 @@ export type TakerRequestQueryParams = RequireOnlyOne<
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
 
-export type V3RFQTIndicativeQuote = Pick<
+// Start suggested changes here
+
+/*
+
+🚨 Made some simplifications: when we built the first iteration of `quote-server`, we thought that RFQM was
+round the corner. Since then, we have 1) decided to de-prioritize RFQM in the near future, and 2) we have decided to
+change the logic behind the way we do RFQM (which is what we call 'Last Look RFQM'). Therefore I took the freedom to
+strip out `quoteExpiry` from the types and remove the RFQM types since this field has never been used and no market maker
+uses it at all.
+
+✅ Used generics: One way to avoid creating every possible conbination of version and response type (Indicative or Firm) is
+to create a generic. this generic can be used like `VersionedQuote<'4', V3RFQTIndicativeQuote>` to dynamically
+build the following interface.
+
+{
+    protocolVersion: '4',
+    response: {
+        makerToken: ...,
+        takerToken: ...,
+        makerAmount: ...,
+        takerAmount: ...,
+        expiry: ...,
+    }
+}
+
+*/
+
+
+export interface VersionedQuote<Version, QuoteType> {
+    protocolVersion: Version;
+    response: QuoteType | undefined;
+}
+
+/*
+// Indicative Quotes
+
+Generate types for both V3 and V4 Indicative quotes. Then use the generic to tie them all together. Removing
+RFQM definitely makes things a lot easier.
+*/
+export type V3RFQIndicativeQuote = Pick<
     V3SignedOrder,
     'makerAssetData' | 'makerAssetAmount' | 'takerAssetData' | 'takerAssetAmount' | 'expirationTimeSeconds'
 >;
 
-export type V4RFQTIndicativeQuote = Pick<
+export type V4RFQIndicativeQuote = Pick<
     V4RfqOrder,
     'makerToken' | 'makerAmount' | 'takerToken' | 'takerAmount' | 'expiry'
 >;
 
-export interface V3RFQMIndicativeQuote extends V3RFQTIndicativeQuote {
-    quoteExpiry: number;
-}
+type IndicativeQuoteResponse = VersionedQuote<'3', V3RFQIndicativeQuote> | VersionedQuote<'4', V4RFQIndicativeQuote> | undefined;
 
-export interface V4RFQMIndicativeQuote extends V4RFQTIndicativeQuote {
-    quoteExpiry: number;
-}
+/*
+// Firm quotes
 
-export type V3IndicativeQuote = V3RFQTIndicativeQuote | V3RFQMIndicativeQuote;
-export type V4IndicativeQuote = V4RFQTIndicativeQuote | V4RFQMIndicativeQuote;
+Same here, tie again different firm quote implementations. I like the approach you took with separating
+order and signature in V4 RFQ 💯.
 
-export interface V3RFQTFirmQuote {
+*/
+export interface V3RFQFirmQuote {
     signedOrder: V3SignedOrder;
 }
 
-export interface V4RFQTFirmQuote {
+export interface V4RFQFirmQuote {
     order: V4RfqOrder;
     signature: V4Signature;
 }
 
-export interface V3RFQMFirmQuote extends V3RFQTFirmQuote {
-    quoteExpiry: number;
-}
+type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote> | undefined;
 
-export interface V4RFQMFirmQuote extends V4RFQTFirmQuote {
-    quoteExpiry: number;
-}
-
-export type V3FirmQuote = V3RFQTFirmQuote | V3RFQMFirmQuote;
-export type V4FirmQuote = V4RFQTFirmQuote | V4RFQMFirmQuote;
-
-export interface V3VersionedIndicativeQuote {
-    protocolVersion: '3';
-    response: V3IndicativeQuote | undefined;
-}
-
-export interface V4VersionedIndicativeQuote {
-    protocolVersion: '4';
-    response: V4IndicativeQuote | undefined;
-}
-
-export interface V3VersionedFirmQuote {
-    protocolVersion: '3';
-    response: V3FirmQuote | undefined;
-}
-
-export interface V4VersionedFirmQuote {
-    protocolVersion: '4';
-    response: V4FirmQuote | undefined;
-}
-
+// Implement
 export interface Quoter {
-    fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<V3VersionedIndicativeQuote | V4VersionedIndicativeQuote | undefined>;
-    fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<V3VersionedFirmQuote | V4VersionedFirmQuote | undefined>;
+    fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuoteResponse>;
+    fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuoteResponse>;
     submitFillAsync(submitRequest: SubmitRequest): Promise<SubmitReceipt | undefined>;
 }
 
