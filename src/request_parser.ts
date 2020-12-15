@@ -1,3 +1,4 @@
+// tslint:disable:no-non-null-assertion
 import { Schema, SchemaValidator } from '@0x/json-schemas';
 import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as express from 'express';
@@ -33,10 +34,10 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             // V4 requests should always pass in a txOrigin, so we need to perform
             // that bit of validation.
             if (query.txOrigin === undefined || query.txOrigin === NULL_ADDRESS) {
-                return {isValid: false, errors: ['V4 queries require a valid "txOrigin"']}
+                return { isValid: false, errors: ['V4 queries require a valid "txOrigin"'] };
             }
         } else {
-            return {isValid: false, errors: [`Invalid protocol version: ${query.protocolVersion}.`]};
+            return { isValid: false, errors: [`Invalid protocol version: ${query.protocolVersion}.`] };
         }
 
         // Querystring values are always returned as strings, therefore a boolean must be parsed as string.
@@ -82,7 +83,12 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
                 };
             }
         } else {
-            return {isValid: false, errors: ['A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).']};
+            return {
+                isValid: false,
+                errors: [
+                    'A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).',
+                ],
+            };
         }
         return { isValid: true, takerRequest };
     }

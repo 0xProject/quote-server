@@ -10,8 +10,8 @@ type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T
 export type SupportedVersion = '3' | '4';
 
 export interface V4SignedRfqOrder extends V4RfqOrder {
-    signature: V4Signature,
-};
+    signature: V4Signature;
+}
 
 export interface BaseTakerRequest {
     sellTokenAddress: string;
@@ -22,7 +22,7 @@ export interface BaseTakerRequest {
     sellAmountBaseUnits?: BigNumber;
     buyAmountBaseUnits?: BigNumber;
     comparisonPrice?: BigNumber;
-};
+}
 
 export interface V3TakerRequest extends BaseTakerRequest {
     protocolVersion: '3';
@@ -70,7 +70,10 @@ export type V4RFQIndicativeQuote = Pick<
     'makerToken' | 'makerAmount' | 'takerToken' | 'takerAmount' | 'expiry'
 >;
 
-type IndicativeQuoteResponse = VersionedQuote<'3', V3RFQIndicativeQuote> | VersionedQuote<'4', V4RFQIndicativeQuote> | undefined;
+type IndicativeQuoteResponse =
+    | VersionedQuote<'3', V3RFQIndicativeQuote>
+    | VersionedQuote<'4', V4RFQIndicativeQuote>
+    | undefined;
 
 // Firm quotes, similar pattern
 export interface V3RFQFirmQuote {

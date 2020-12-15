@@ -1,15 +1,24 @@
-import { generatePseudoRandomSalt, SignedOrder } from '@0x/order-utils';
-import { BigNumber, logUtils, NULL_ADDRESS } from '@0x/utils';
+// tslint:disable:max-file-line-count
+import { SignedOrder } from '@0x/order-utils';
+import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as chai from 'chai';
 import * as HttpStatus from 'http-status-codes';
 import * as httpMocks from 'node-mocks-http';
-import { parse } from 'path';
 import * as TypeMoq from 'typemoq';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
 import { generateApiKeyHandler, submitRequestHandler, takerRequestHandler } from '../src/handlers';
 import { parseTakerRequest } from '../src/request_parser';
-import { Quoter, SubmitRequest, TakerRequest, V3RFQFirmQuote, V3RFQIndicativeQuote, V4RFQFirmQuote, V4SignedRfqOrder, VersionedQuote } from '../src/types';
+import {
+    Quoter,
+    SubmitRequest,
+    TakerRequest,
+    V3RFQFirmQuote,
+    V3RFQIndicativeQuote,
+    V4RFQFirmQuote,
+    V4SignedRfqOrder,
+    VersionedQuote,
+} from '../src/types';
 
 const expect = chai.expect;
 
@@ -51,7 +60,7 @@ const fakeV4Order: V4SignedRfqOrder = {
         v: 27,
         r: '0xblah',
         s: '0xblah',
-    }
+    },
 };
 
 describe('parseTakerRequest', () => {
@@ -160,28 +169,35 @@ describe('parseTakerRequest', () => {
             } else {
                 expect.fail('Returned protocol version is not 4');
             }
-
         } else {
             expect.fail('Parsed request is not valid');
         }
     });
 
     it('should fail version with an invalid protocol or txOrigin', () => {
-        const tests: {protocolVersion: string, txOrigin?: string, expectedErrorMsg: string}[] = [
-            {protocolVersion: '4', txOrigin: '0xfoo', expectedErrorMsg: 'instance.txOrigin does not match pattern "^0x[0-9a-fA-F]{40}$"'},
-            {protocolVersion: '4', txOrigin: NULL_ADDRESS, expectedErrorMsg: 'V4 queries require a valid "txOrigin"'},
-            {protocolVersion: '4', txOrigin: undefined, expectedErrorMsg: 'V4 queries require a valid "txOrigin"'},
-            {protocolVersion: '5', txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef', expectedErrorMsg: 'Invalid protocol version: 5.'},
+        const tests: { protocolVersion: string; txOrigin?: string; expectedErrorMsg: string }[] = [
+            {
+                protocolVersion: '4',
+                txOrigin: '0xfoo',
+                expectedErrorMsg: 'instance.txOrigin does not match pattern "^0x[0-9a-fA-F]{40}$"',
+            },
+            { protocolVersion: '4', txOrigin: NULL_ADDRESS, expectedErrorMsg: 'V4 queries require a valid "txOrigin"' },
+            { protocolVersion: '4', txOrigin: undefined, expectedErrorMsg: 'V4 queries require a valid "txOrigin"' },
+            {
+                protocolVersion: '5',
+                txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+                expectedErrorMsg: 'Invalid protocol version: 5.',
+            },
         ];
-        for(const test of tests) {
-            const {protocolVersion, txOrigin, expectedErrorMsg} = test;
+        for (const test of tests) {
+            const { protocolVersion, txOrigin, expectedErrorMsg } = test;
             const query = {
                 sellTokenAddress: NULL_ADDRESS,
                 buyTokenAddress: NULL_ADDRESS,
                 takerAddress: NULL_ADDRESS,
                 sellAmountBaseUnits: '1225000000',
                 protocolVersion,
-                ...txOrigin? {txOrigin} : {},
+                ...(txOrigin ? { txOrigin } : {}),
             };
             const request = {
                 query,
@@ -353,7 +369,13 @@ describe('taker request handler', () => {
     it('should defer to quoter and return response for indicative quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
 
-        const { makerAssetData, makerAssetAmount, takerAssetAmount, takerAssetData, expirationTimeSeconds } = fakeV3Order;
+        const {
+            makerAssetData,
+            makerAssetAmount,
+            takerAssetAmount,
+            takerAssetData,
+            expirationTimeSeconds,
+        } = fakeV3Order;
         const indicativeQuote: VersionedQuote<'3', V3RFQIndicativeQuote> = {
             protocolVersion: '3',
             response: {
@@ -362,7 +384,7 @@ describe('taker request handler', () => {
                 takerAssetAmount,
                 takerAssetData,
                 expirationTimeSeconds,
-            }
+            },
         };
         quoter
             .setup(async q => q.fetchIndicativeQuoteAsync(fakeV3TakerRequest))
@@ -480,7 +502,7 @@ describe('taker request handler', () => {
                 buyAmountBaseUnits: fakeV4TakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeV4TakerRequest.takerAddress,
                 txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
-                protocolVersion: '4'
+                protocolVersion: '4',
             },
             headers: { '0x-api-key': fakeV4TakerRequest.apiKey },
         });
