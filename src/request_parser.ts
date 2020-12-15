@@ -1,5 +1,5 @@
 import { Schema, SchemaValidator } from '@0x/json-schemas';
-import { BigNumber } from '@0x/utils';
+import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as express from 'express';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
@@ -29,8 +29,14 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             protocolVersion = '3';
         } else if (query.protocolVersion === '4') {
             protocolVersion = '4';
+
+            // V4 requests should always pass in a txOrigin, so we need to perform
+            // that bit of validation.
+            if (query.txOrigin === undefined || query.txOrigin === NULL_ADDRESS) {
+                return {isValid: false, errors: ['V4 queries require a valid "txOrigin"']}
+            }
         } else {
-            throw new Error('Unsupported protocol version.');
+            return {isValid: false, errors: [`Invalid protocol version: ${query.protocolVersion}.`]};
         }
 
         // Querystring values are always returned as strings, therefore a boolean must be parsed as string.
@@ -53,16 +59,12 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
                     sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
                 };
             } else {
-                if (query.txOrigin !== undefined) {
-                    takerRequest = {
-                        ...takerRequestBase,
-                        sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
-                        protocolVersion,
-                        txOrigin: query.txOrigin,
-                    };
-                } else {
-                    throw new Error('v4 request must specify txOrigin');
-                }
+                takerRequest = {
+                    ...takerRequestBase,
+                    sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
+                    protocolVersion,
+                    txOrigin: query.txOrigin!,
+                };
             }
         } else if (query.buyAmountBaseUnits !== undefined && query.sellAmountBaseUnits === undefined) {
             if (protocolVersion === '3') {
@@ -72,21 +74,15 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
                     buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
                 };
             } else {
-                if (query.txOrigin !== undefined) {
-                    takerRequest = {
-                        ...takerRequestBase,
-                        protocolVersion,
-                        buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
-                        txOrigin: query.txOrigin,
-                    };
-                } else {
-                    throw new Error('v4 request must specify txOrigin');
-                }
+                takerRequest = {
+                    ...takerRequestBase,
+                    protocolVersion,
+                    buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
+                    txOrigin: query.txOrigin!,
+                };
             }
         } else {
-            throw new Error(
-                'A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).',
-            );
+            return {isValid: false, errors: ['A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).']};
         }
         return { isValid: true, takerRequest };
     }

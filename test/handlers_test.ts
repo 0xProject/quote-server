@@ -1,8 +1,9 @@
-import { SignedOrder } from '@0x/order-utils';
+import { generatePseudoRandomSalt, SignedOrder } from '@0x/order-utils';
 import { BigNumber, logUtils, NULL_ADDRESS } from '@0x/utils';
 import * as chai from 'chai';
 import * as HttpStatus from 'http-status-codes';
 import * as httpMocks from 'node-mocks-http';
+import { parse } from 'path';
 import * as TypeMoq from 'typemoq';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
@@ -39,7 +40,7 @@ const fakeV4Order: V4SignedRfqOrder = {
     takerAmount: new BigNumber(1),
     maker: '0xabc',
     taker: '0xabc',
-    txOrigin: '0xabc',
+    txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
     pool: '0x0000001',
     expiry: new BigNumber(1000),
     salt: new BigNumber(1000),
@@ -144,7 +145,7 @@ describe('parseTakerRequest', () => {
             takerAddress: NULL_ADDRESS,
             sellAmountBaseUnits: '1225000000',
             protocolVersion: '4',
-            txOrigin: NULL_ADDRESS,
+            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
         };
         const request = {
             query,
@@ -155,7 +156,7 @@ describe('parseTakerRequest', () => {
         const parsedRequest = parseTakerRequest(request);
         if (parsedRequest.isValid) {
             if (parsedRequest.takerRequest.protocolVersion === '4') {
-                expect(parsedRequest.takerRequest.txOrigin === NULL_ADDRESS);
+                expect(parsedRequest.takerRequest.txOrigin === '0x61935cbdd02287b511119ddb11aeb42f1593b7ef');
             } else {
                 expect.fail('Returned protocol version is not 4');
             }
@@ -165,27 +166,35 @@ describe('parseTakerRequest', () => {
         }
     });
 
-    it('should fail v4 requests where txOrigin is not specified', () => {
-        const query = {
-            sellTokenAddress: NULL_ADDRESS,
-            buyTokenAddress: NULL_ADDRESS,
-            takerAddress: NULL_ADDRESS,
-            sellAmountBaseUnits: '1225000000',
-            protocolVersion: '4',
-        };
-        const request = {
-            query,
-            headers: {
-                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
-            },
-        };
-
-        try {
+    it('should fail version with an invalid protocol or txOrigin', () => {
+        const tests: {protocolVersion: string, txOrigin?: string, expectedErrorMsg: string}[] = [
+            {protocolVersion: '4', txOrigin: '0xfoo', expectedErrorMsg: 'instance.txOrigin does not match pattern "^0x[0-9a-fA-F]{40}$"'},
+            {protocolVersion: '4', txOrigin: NULL_ADDRESS, expectedErrorMsg: 'V4 queries require a valid "txOrigin"'},
+            {protocolVersion: '4', txOrigin: undefined, expectedErrorMsg: 'V4 queries require a valid "txOrigin"'},
+            {protocolVersion: '5', txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef', expectedErrorMsg: 'Invalid protocol version: 5.'},
+        ];
+        for(const test of tests) {
+            const {protocolVersion, txOrigin, expectedErrorMsg} = test;
+            const query = {
+                sellTokenAddress: NULL_ADDRESS,
+                buyTokenAddress: NULL_ADDRESS,
+                takerAddress: NULL_ADDRESS,
+                sellAmountBaseUnits: '1225000000',
+                protocolVersion,
+                ...txOrigin? {txOrigin} : {},
+            };
+            const request = {
+                query,
+                headers: {
+                    [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+                },
+            };
             const parsedRequest = parseTakerRequest(request);
-            logUtils.log(parsedRequest);
-            expect.fail('request should have failed');
-        } catch (e) {
-            expect(e.message).to.eql('v4 request must specify txOrigin');
+            if (parsedRequest.isValid) {
+                expect.fail('Request should be invalid');
+            } else {
+                expect(parsedRequest.errors[0]).to.eql(expectedErrorMsg);
+            }
         }
     });
 });
@@ -268,7 +277,7 @@ describe('taker request handler', () => {
         apiKey: 'kool-api-key',
         canMakerControlSettlement: undefined,
         comparisonPrice: undefined,
-        txOrigin: '0xabc',
+        txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
         protocolVersion: '4',
     };
 
@@ -470,7 +479,7 @@ describe('taker request handler', () => {
                 // tslint:disable-next-line:no-non-null-assertion
                 buyAmountBaseUnits: fakeV4TakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeV4TakerRequest.takerAddress,
-                txOrigin: '0xabc',
+                txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
                 protocolVersion: '4'
             },
             headers: { '0x-api-key': fakeV4TakerRequest.apiKey },

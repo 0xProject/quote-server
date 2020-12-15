@@ -12,6 +12,12 @@
         },
         "comparisonPrice": {
             "$ref": "/numberSchema"
+        },
+        "protocolVersion": {
+            "$ref": "/numberSchema"
+        },
+        "txOrigin": {
+            "$ref": "/addressSchema"
         }
     },
     "required": ["sellTokenAddress", "buyTokenAddress", "takerAddress"],
