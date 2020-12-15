@@ -9,6 +9,10 @@ type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T
 
 export type SupportedVersion = '3' | '4';
 
+export interface V4SignedRfqOrder extends V4RfqOrder {
+    signature: V4Signature,
+};
+
 export interface BaseTakerRequest {
     sellTokenAddress: string;
     buyTokenAddress: string;
@@ -74,13 +78,12 @@ export interface V3RFQFirmQuote {
 }
 
 export interface V4RFQFirmQuote {
-    order: V4RfqOrder;
-    signature: V4Signature;
+    signedOrder: V4SignedRfqOrder;
 }
 
 type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote> | undefined;
 
-// Implement quoter that is type agnostic
+// Implement quoter that is version agnostic
 export interface Quoter {
     fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuoteResponse>;
     fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuoteResponse>;

@@ -8,11 +8,11 @@ import * as TypeMoq from 'typemoq';
 import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
 import { generateApiKeyHandler, submitRequestHandler, takerRequestHandler } from '../src/handlers';
 import { parseTakerRequest } from '../src/request_parser';
-import { Quoter, SubmitRequest, TakerRequest, V3RFQFirmQuote, V3RFQIndicativeQuote, VersionedQuote } from '../src/types';
+import { Quoter, SubmitRequest, TakerRequest, V3RFQFirmQuote, V3RFQIndicativeQuote, V4RFQFirmQuote, V4SignedRfqOrder, VersionedQuote } from '../src/types';
 
 const expect = chai.expect;
 
-const fakeOrder: SignedOrder = {
+const fakeV3Order: SignedOrder = {
     chainId: 1,
     exchangeAddress: '0xabc',
     makerAddress: '0xabc',
@@ -30,6 +30,27 @@ const fakeOrder: SignedOrder = {
     makerFeeAssetData: '0xabc',
     takerFeeAssetData: '0xabc',
     signature: 'fakeSignature',
+};
+
+const fakeV4Order: V4SignedRfqOrder = {
+    makerToken: '0xabc',
+    takerToken: '0xabc',
+    makerAmount: new BigNumber(1),
+    takerAmount: new BigNumber(1),
+    maker: '0xabc',
+    taker: '0xabc',
+    txOrigin: '0xabc',
+    pool: '0x0000001',
+    expiry: new BigNumber(1000),
+    salt: new BigNumber(1000),
+    chainId: 1,
+    verifyingContract: '0xabc',
+    signature: {
+        signatureType: 3,
+        v: 27,
+        r: '0xblah',
+        s: '0xblah',
+    }
 };
 
 describe('parseTakerRequest', () => {
@@ -229,7 +250,7 @@ describe('api key handler', () => {
 });
 
 describe('taker request handler', () => {
-    const fakeTakerRequest: TakerRequest = {
+    const fakeV3TakerRequest: TakerRequest = {
         buyTokenAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
         sellTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         buyAmountBaseUnits: new BigNumber(1000000000000000000),
@@ -239,29 +260,40 @@ describe('taker request handler', () => {
         comparisonPrice: undefined,
         protocolVersion: '3',
     };
+    const fakeV4TakerRequest: TakerRequest = {
+        buyTokenAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
+        sellTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        buyAmountBaseUnits: new BigNumber(1000000000000000000),
+        takerAddress: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
+        apiKey: 'kool-api-key',
+        canMakerControlSettlement: undefined,
+        comparisonPrice: undefined,
+        txOrigin: '0xabc',
+        protocolVersion: '4',
+    };
 
     it('should defer to quoter and return response for firm quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         const expectedResponse: VersionedQuote<'3', V3RFQFirmQuote> = {
             response: {
-                signedOrder: fakeOrder,
+                signedOrder: fakeV3Order,
             },
             protocolVersion: '3',
         };
         quoter
-            .setup(async q => q.fetchFirmQuoteAsync(fakeTakerRequest))
+            .setup(async q => q.fetchFirmQuoteAsync(fakeV3TakerRequest))
             .returns(async () => expectedResponse)
             .verifiable(TypeMoq.Times.once());
 
         const req = httpMocks.createRequest({
             query: {
-                buyTokenAddress: fakeTakerRequest.buyTokenAddress,
-                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
+                sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line: no-non-null-assertion
-                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
-                takerAddress: fakeTakerRequest.takerAddress,
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                takerAddress: fakeV3TakerRequest.takerAddress,
             },
-            headers: { '0x-api-key': fakeTakerRequest.apiKey },
+            headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
         });
         const resp = httpMocks.createResponse();
 
@@ -276,12 +308,12 @@ describe('taker request handler', () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         const expectedResponse: VersionedQuote<'3', V3RFQFirmQuote> = {
             response: {
-                signedOrder: fakeOrder,
+                signedOrder: fakeV3Order,
             },
             protocolVersion: '3',
         };
         const takerRequest = {
-            ...fakeTakerRequest,
+            ...fakeV3TakerRequest,
             canMakerControlSettlement: true,
             apiKey: undefined,
         };
@@ -312,7 +344,7 @@ describe('taker request handler', () => {
     it('should defer to quoter and return response for indicative quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
 
-        const { makerAssetData, makerAssetAmount, takerAssetAmount, takerAssetData, expirationTimeSeconds } = fakeOrder;
+        const { makerAssetData, makerAssetAmount, takerAssetAmount, takerAssetData, expirationTimeSeconds } = fakeV3Order;
         const indicativeQuote: VersionedQuote<'3', V3RFQIndicativeQuote> = {
             protocolVersion: '3',
             response: {
@@ -324,19 +356,19 @@ describe('taker request handler', () => {
             }
         };
         quoter
-            .setup(async q => q.fetchIndicativeQuoteAsync(fakeTakerRequest))
+            .setup(async q => q.fetchIndicativeQuoteAsync(fakeV3TakerRequest))
             .returns(async () => indicativeQuote)
             .verifiable(TypeMoq.Times.once());
 
         const req = httpMocks.createRequest({
             query: {
-                buyTokenAddress: fakeTakerRequest.buyTokenAddress,
-                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
+                sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line: no-non-null-assertion
-                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
-                takerAddress: fakeTakerRequest.takerAddress,
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                takerAddress: fakeV3TakerRequest.takerAddress,
             },
-            headers: { '0x-api-key': fakeTakerRequest.apiKey },
+            headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
         });
         const resp = httpMocks.createResponse();
 
@@ -350,19 +382,19 @@ describe('taker request handler', () => {
     it('should handle empty indicative quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         quoter
-            .setup(async q => q.fetchIndicativeQuoteAsync(fakeTakerRequest))
+            .setup(async q => q.fetchIndicativeQuoteAsync(fakeV3TakerRequest))
             .returns(async () => undefined)
             .verifiable(TypeMoq.Times.once());
 
         const req = httpMocks.createRequest({
             query: {
-                buyTokenAddress: fakeTakerRequest.buyTokenAddress,
-                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
+                sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
-                takerAddress: fakeTakerRequest.takerAddress,
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                takerAddress: fakeV3TakerRequest.takerAddress,
             },
-            headers: { '0x-api-key': fakeTakerRequest.apiKey },
+            headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
         });
         const resp = httpMocks.createResponse();
 
@@ -375,19 +407,19 @@ describe('taker request handler', () => {
     it('should handle empty firm quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         quoter
-            .setup(async q => q.fetchFirmQuoteAsync(fakeTakerRequest))
+            .setup(async q => q.fetchFirmQuoteAsync(fakeV3TakerRequest))
             .returns(async () => undefined)
             .verifiable(TypeMoq.Times.once());
 
         const req = httpMocks.createRequest({
             query: {
-                buyTokenAddress: fakeTakerRequest.buyTokenAddress,
-                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
+                sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
-                takerAddress: fakeTakerRequest.takerAddress,
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                takerAddress: fakeV3TakerRequest.takerAddress,
             },
-            headers: { '0x-api-key': fakeTakerRequest.apiKey },
+            headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
         });
         const resp = httpMocks.createResponse();
 
@@ -402,12 +434,12 @@ describe('taker request handler', () => {
 
         const req = httpMocks.createRequest({
             query: {
-                sellTokenAddress: fakeTakerRequest.sellTokenAddress,
+                sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeTakerRequest.buyAmountBaseUnits!.toString(),
-                takerAddress: fakeTakerRequest.takerAddress,
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                takerAddress: fakeV3TakerRequest.takerAddress,
             },
-            headers: { '0x-api-key': fakeTakerRequest.apiKey },
+            headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
         });
         const resp = httpMocks.createResponse();
 
@@ -417,6 +449,40 @@ describe('taker request handler', () => {
         expect(Object.keys(returnedData)).to.eql(['errors']);
         expect(returnedData.errors.length).to.eql(1);
         expect(returnedData.errors[0]).to.eql('instance requires property "buyTokenAddress"');
+    });
+    it('should handle a valid v4 request', async () => {
+        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+        const expectedResponse: VersionedQuote<'4', V4RFQFirmQuote> = {
+            response: {
+                signedOrder: fakeV4Order,
+            },
+            protocolVersion: '4',
+        };
+        quoter
+            .setup(async q => q.fetchFirmQuoteAsync(fakeV4TakerRequest))
+            .returns(async () => expectedResponse)
+            .verifiable(TypeMoq.Times.once());
+
+        const req = httpMocks.createRequest({
+            query: {
+                buyTokenAddress: fakeV4TakerRequest.buyTokenAddress,
+                sellTokenAddress: fakeV4TakerRequest.sellTokenAddress,
+                // tslint:disable-next-line:no-non-null-assertion
+                buyAmountBaseUnits: fakeV4TakerRequest.buyAmountBaseUnits!.toString(),
+                takerAddress: fakeV4TakerRequest.takerAddress,
+                txOrigin: '0xabc',
+                protocolVersion: '4'
+            },
+            headers: { '0x-api-key': fakeV4TakerRequest.apiKey },
+        });
+        const resp = httpMocks.createResponse();
+
+        await takerRequestHandler('firm', quoter.object, req, resp);
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse)));
+
+        quoter.verifyAll();
     });
 });
 
