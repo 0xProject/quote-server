@@ -70,10 +70,9 @@ export type V4RFQIndicativeQuote = Pick<
     'makerToken' | 'makerAmount' | 'takerToken' | 'takerAmount' | 'expiry'
 >;
 
-type IndicativeQuoteResponse =
+export type IndicativeQuoteResponse =
     | VersionedQuote<'3', V3RFQIndicativeQuote>
-    | VersionedQuote<'4', V4RFQIndicativeQuote>
-    | undefined;
+    | VersionedQuote<'4', V4RFQIndicativeQuote>;
 
 // Firm quotes, similar pattern
 export interface V3RFQFirmQuote {
@@ -84,7 +83,7 @@ export interface V4RFQFirmQuote {
     signedOrder: V4SignedRfqOrder;
 }
 
-type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote> | undefined;
+export type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote>;
 
 // Implement quoter that is version agnostic
 export interface Quoter {
