@@ -11,4 +11,7 @@ export {
     V4RFQIndicativeQuote,
     V4RFQFirmQuote,
     V4SignedRfqOrder,
+    VersionedQuote,
+    IndicativeQuoteResponse,
+    FirmQuoteResponse,
 } from './types';
