@@ -45,7 +45,15 @@ export const takerRequestHandler = async (
             : quoter.fetchIndicativeQuoteAsync(takerRequest);
 
     const response = await responsePromise;
+    if (response && response.protocolVersion !== takerRequest.protocolVersion) {
+        console.error('Response and request protocol versions do not match');
+        return res
+            .status(HttpStatus.NOT_IMPLEMENTED)
+            .json({ errors: ['Server does not support the requested protocol version'] })
+            .end();
+    }
     const result = response ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
+
     return result.end();
 };
 

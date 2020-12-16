@@ -1,4 +1,5 @@
-import { SignedOrder } from '@0x/order-utils';
+import { SignedOrder as V3SignedOrder } from '@0x/order-utils';
+import { RfqOrderFields as V4RfqOrder, Signature as V4Signature } from '@0x/protocol-utils';
 import { BigNumber } from '@0x/utils';
 
 // Requires that one of many properites is specified
@@ -6,23 +7,36 @@ import { BigNumber } from '@0x/utils';
 type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T, Keys>> &
     { [K in Keys]-?: Required<Pick<T, K>> & Partial<Record<Exclude<Keys, K>, undefined>> }[Keys];
 
-export type TakerRequest = RequireOnlyOne<
-    {
-        sellTokenAddress: string;
-        buyTokenAddress: string;
-        takerAddress: string;
-        apiKey?: string;
-        canMakerControlSettlement?: boolean;
-        sellAmountBaseUnits?: BigNumber;
-        buyAmountBaseUnits?: BigNumber;
-        comparisonPrice?: BigNumber;
-    },
-    'sellAmountBaseUnits' | 'buyAmountBaseUnits'
->;
+export type SupportedVersion = '3' | '4';
+
+export interface V4SignedRfqOrder extends V4RfqOrder {
+    signature: V4Signature;
+}
+
+export interface BaseTakerRequest {
+    sellTokenAddress: string;
+    buyTokenAddress: string;
+    takerAddress: string;
+    apiKey?: string;
+    canMakerControlSettlement?: boolean;
+    sellAmountBaseUnits?: BigNumber;
+    buyAmountBaseUnits?: BigNumber;
+    comparisonPrice?: BigNumber;
+}
+
+export interface V3TakerRequest extends BaseTakerRequest {
+    protocolVersion: '3';
+}
+
+export interface V4TakerRequest extends BaseTakerRequest {
+    protocolVersion: '4';
+    txOrigin: string;
+}
+
+export type TakerRequest = V3TakerRequest | V4TakerRequest;
 
 export type TakerRequestQueryParams = RequireOnlyOne<
     {
-        // export interface TakerRequestQueryParams {
         sellTokenAddress: string;
         buyTokenAddress: string;
         takerAddress: string;
@@ -30,35 +44,52 @@ export type TakerRequestQueryParams = RequireOnlyOne<
         buyAmountBaseUnits?: string;
         comparisonPrice?: string;
         canMakerControlSettlement?: string;
-        // };
+        txOrigin?: string;
+        protocolVersion?: string;
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
 
-export type RFQTIndicativeQuote = Pick<
-    SignedOrder,
+export interface VersionedQuote<Version, QuoteType> {
+    protocolVersion: Version;
+    response: QuoteType | undefined;
+}
+
+/*
+// Indicative Quotes
+
+Generate types for both V3 and V4 Indicative quotes. Then use the generic to tie them all together.
+*/
+export type V3RFQIndicativeQuote = Pick<
+    V3SignedOrder,
     'makerAssetData' | 'makerAssetAmount' | 'takerAssetData' | 'takerAssetAmount' | 'expirationTimeSeconds'
 >;
 
-export interface RFQMIndicativeQuote extends RFQTIndicativeQuote {
-    quoteExpiry: number;
+export type V4RFQIndicativeQuote = Pick<
+    V4RfqOrder,
+    'makerToken' | 'makerAmount' | 'takerToken' | 'takerAmount' | 'expiry'
+>;
+
+type IndicativeQuoteResponse =
+    | VersionedQuote<'3', V3RFQIndicativeQuote>
+    | VersionedQuote<'4', V4RFQIndicativeQuote>
+    | undefined;
+
+// Firm quotes, similar pattern
+export interface V3RFQFirmQuote {
+    signedOrder: V3SignedOrder;
 }
 
-export type IndicativeQuote = RFQTIndicativeQuote | RFQMIndicativeQuote;
-
-export interface RFQTFirmQuote {
-    signedOrder: SignedOrder;
+export interface V4RFQFirmQuote {
+    signedOrder: V4SignedRfqOrder;
 }
 
-export interface RFQMFirmQuote extends RFQTFirmQuote {
-    quoteExpiry: number;
-}
+type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote> | undefined;
 
-export type FirmQuote = RFQTFirmQuote | RFQMFirmQuote;
-
+// Implement quoter that is version agnostic
 export interface Quoter {
-    fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuote | undefined>;
-    fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuote | undefined>;
+    fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuoteResponse>;
+    fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuoteResponse>;
     submitFillAsync(submitRequest: SubmitRequest): Promise<SubmitReceipt | undefined>;
 }
 

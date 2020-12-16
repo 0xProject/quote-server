@@ -1,11 +1,12 @@
+// tslint:disable:no-non-null-assertion
 import { Schema, SchemaValidator } from '@0x/json-schemas';
-import { BigNumber } from '@0x/utils';
+import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as express from 'express';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
 import * as submitRequestSchema from './schemas/submit_request_schema.json';
 import * as takerRequestSchema from './schemas/taker_request_schema.json';
-import { SubmitRequest, TakerRequest, TakerRequestQueryParams } from './types';
+import { BaseTakerRequest, SubmitRequest, SupportedVersion, TakerRequest, TakerRequestQueryParams } from './types';
 
 type ParsedTakerRequest = { isValid: true; takerRequest: TakerRequest } | { isValid: false; errors: string[] };
 
@@ -24,9 +25,24 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             apiKey = undefined;
         }
 
+        let protocolVersion: SupportedVersion;
+        if (query.protocolVersion === undefined || query.protocolVersion === '3') {
+            protocolVersion = '3';
+        } else if (query.protocolVersion === '4') {
+            protocolVersion = '4';
+
+            // V4 requests should always pass in a txOrigin, so we need to perform
+            // that bit of validation.
+            if (query.txOrigin === undefined || query.txOrigin === NULL_ADDRESS) {
+                return { isValid: false, errors: ['V4 queries require a valid "txOrigin"'] };
+            }
+        } else {
+            return { isValid: false, errors: [`Invalid protocol version: ${query.protocolVersion}.`] };
+        }
+
         // Querystring values are always returned as strings, therefore a boolean must be parsed as string.
         const canMakerControlSettlement = query.canMakerControlSettlement === 'true' ? true : undefined;
-        const takerRequestBase = {
+        const takerRequestBase: BaseTakerRequest = {
             sellTokenAddress: query.sellTokenAddress,
             buyTokenAddress: query.buyTokenAddress,
             apiKey,
@@ -37,19 +53,42 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
 
         let takerRequest: TakerRequest;
         if (query.sellAmountBaseUnits !== undefined && query.buyAmountBaseUnits === undefined) {
-            takerRequest = {
-                ...takerRequestBase,
-                sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
-            };
+            if (protocolVersion === '3') {
+                takerRequest = {
+                    ...takerRequestBase,
+                    protocolVersion,
+                    sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
+                };
+            } else {
+                takerRequest = {
+                    ...takerRequestBase,
+                    sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
+                    protocolVersion,
+                    txOrigin: query.txOrigin!,
+                };
+            }
         } else if (query.buyAmountBaseUnits !== undefined && query.sellAmountBaseUnits === undefined) {
-            takerRequest = {
-                ...takerRequestBase,
-                buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
-            };
+            if (protocolVersion === '3') {
+                takerRequest = {
+                    ...takerRequestBase,
+                    protocolVersion,
+                    buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
+                };
+            } else {
+                takerRequest = {
+                    ...takerRequestBase,
+                    protocolVersion,
+                    buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
+                    txOrigin: query.txOrigin!,
+                };
+            }
         } else {
-            throw new Error(
-                'A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).',
-            );
+            return {
+                isValid: false,
+                errors: [
+                    'A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).',
+                ],
+            };
         }
         return { isValid: true, takerRequest };
     }
