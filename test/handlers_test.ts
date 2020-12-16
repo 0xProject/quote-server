@@ -325,7 +325,7 @@ describe('taker request handler', () => {
         await takerRequestHandler('firm', quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse)));
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse.response)));
 
         quoter.verifyAll();
     });
@@ -362,7 +362,7 @@ describe('taker request handler', () => {
         await takerRequestHandler('firm', quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse)));
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse.response)));
 
         quoter.verifyAll();
     });
@@ -406,7 +406,7 @@ describe('taker request handler', () => {
         await takerRequestHandler('indicative', quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(indicativeQuote)));
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(indicativeQuote.response)));
 
         quoter.verifyAll();
     });
@@ -414,7 +414,9 @@ describe('taker request handler', () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         quoter
             .setup(async q => q.fetchIndicativeQuoteAsync(fakeV3TakerRequest))
-            .returns(async () => undefined)
+            .returns(async () => {
+                return { protocolVersion: '3', response: undefined };
+            })
             .verifiable(TypeMoq.Times.once());
 
         const req = httpMocks.createRequest({
@@ -439,7 +441,9 @@ describe('taker request handler', () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         quoter
             .setup(async q => q.fetchFirmQuoteAsync(fakeV3TakerRequest))
-            .returns(async () => undefined)
+            .returns(async () => {
+                return { protocolVersion: '3', response: undefined };
+            })
             .verifiable(TypeMoq.Times.once());
 
         const req = httpMocks.createRequest({
@@ -511,7 +515,7 @@ describe('taker request handler', () => {
         await takerRequestHandler('firm', quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse)));
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse.response)));
 
         quoter.verifyAll();
     });
