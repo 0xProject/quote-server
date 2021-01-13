@@ -300,9 +300,7 @@ describe('taker request handler', () => {
     it('should defer to quoter and return response for firm quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         const expectedResponse: VersionedQuote<'3', V3RFQFirmQuote> = {
-            response: {
-                signedOrder: fakeV3Order,
-            },
+            response: fakeV3Order,
             protocolVersion: '3',
         };
         quoter
@@ -332,9 +330,7 @@ describe('taker request handler', () => {
     it('should succeed without an API key if `canMakerControlSettlement` is set to `true` when requesting a firm quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         const expectedResponse: VersionedQuote<'3', V3RFQFirmQuote> = {
-            response: {
-                signedOrder: fakeV3Order,
-            },
+            response: fakeV3Order,
             protocolVersion: '3',
         };
         const takerRequest = {
@@ -488,9 +484,7 @@ describe('taker request handler', () => {
     it('should handle a valid v4 request', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
         const expectedResponse: VersionedQuote<'4', V4RFQFirmQuote> = {
-            response: {
-                signedOrder: fakeV4Order,
-            },
+            response: fakeV4Order,
             protocolVersion: '4',
         };
         quoter

@@ -75,12 +75,10 @@ export type IndicativeQuoteResponse =
     | VersionedQuote<'4', V4RFQIndicativeQuote>;
 
 // Firm quotes, similar pattern
-export interface V3RFQFirmQuote {
-    signedOrder: V3SignedOrder;
-}
+export type V3RFQFirmQuote = V3SignedOrder;
 
-export interface V4RFQFirmQuote {
-    signedOrder: V4SignedRfqOrder;
+export interface V4RFQFirmQuote extends V4RfqOrder {
+    signature: V4Signature;
 }
 
 export type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote>;
