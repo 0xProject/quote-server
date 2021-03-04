@@ -174,6 +174,34 @@ describe('parseTakerRequest', () => {
         }
     });
 
+    it('should handle v4 requests with isLastLook', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+            protocolVersion: '4',
+            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            isLastLook: 'true',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (parsedRequest.isValid) {
+            if (parsedRequest.takerRequest.protocolVersion === '4') {
+                expect(parsedRequest.takerRequest.isLastLook).to.equal(true);
+            } else {
+                expect.fail('Returned protocol version is not 4');
+            }
+        } else {
+            expect.fail('Parsed request is not valid');
+        }
+    });
+
     it('should fail version with an invalid protocol or txOrigin', () => {
         const tests: { protocolVersion: string; txOrigin?: string; expectedErrorMsg: string }[] = [
             {
@@ -295,6 +323,7 @@ describe('taker request handler', () => {
         comparisonPrice: undefined,
         txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
         protocolVersion: '4',
+        isLastLook: false
     };
 
     it('should defer to quoter and return response for firm quote', async () => {

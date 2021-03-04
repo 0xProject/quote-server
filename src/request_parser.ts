@@ -42,6 +42,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
 
         // Querystring values are always returned as strings, therefore a boolean must be parsed as string.
         const canMakerControlSettlement = query.canMakerControlSettlement === 'true' ? true : undefined;
+        const isLastLook = query.isLastLook === 'true';
         const takerRequestBase: BaseTakerRequest = {
             sellTokenAddress: query.sellTokenAddress,
             buyTokenAddress: query.buyTokenAddress,
@@ -62,9 +63,10 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             } else {
                 takerRequest = {
                     ...takerRequestBase,
-                    sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
                     protocolVersion,
+                    sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
                     txOrigin: query.txOrigin!,
+                    isLastLook,
                 };
             }
         } else if (query.buyAmountBaseUnits !== undefined && query.sellAmountBaseUnits === undefined) {
@@ -80,6 +82,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
                     protocolVersion,
                     buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
                     txOrigin: query.txOrigin!,
+                    isLastLook,
                 };
             }
         } else {
