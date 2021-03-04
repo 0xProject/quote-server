@@ -18,7 +18,6 @@ export interface BaseTakerRequest {
     buyTokenAddress: string;
     takerAddress: string;
     apiKey?: string;
-    canMakerControlSettlement?: boolean;
     sellAmountBaseUnits?: BigNumber;
     buyAmountBaseUnits?: BigNumber;
     comparisonPrice?: BigNumber;
@@ -44,7 +43,6 @@ export type TakerRequestQueryParams = RequireOnlyOne<
         sellAmountBaseUnits?: string;
         buyAmountBaseUnits?: string;
         comparisonPrice?: string;
-        canMakerControlSettlement?: string;
         protocolVersion?: string;
         txOrigin?: string;
         isLastLook?: string;

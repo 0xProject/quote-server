@@ -51,14 +51,12 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
         }
 
         // Querystring values are always returned as strings, therefore a boolean must be parsed as string.
-        const canMakerControlSettlement = query.canMakerControlSettlement === 'true' ? true : undefined;
         const isLastLook = query.isLastLook === 'true';
         const takerRequestBase: BaseTakerRequest = {
             sellTokenAddress: query.sellTokenAddress,
             buyTokenAddress: query.buyTokenAddress,
             apiKey,
             takerAddress: query.takerAddress,
-            canMakerControlSettlement,
             comparisonPrice: query.comparisonPrice ? new BigNumber(query.comparisonPrice) : undefined,
             sellAmountBaseUnits: query.sellAmountBaseUnits ? new BigNumber(query.sellAmountBaseUnits) : undefined,
             buyAmountBaseUnits: query.buyAmountBaseUnits ? new BigNumber(query.buyAmountBaseUnits) : undefined,
