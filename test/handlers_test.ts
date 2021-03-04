@@ -323,7 +323,7 @@ describe('taker request handler', () => {
         comparisonPrice: undefined,
         txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
         protocolVersion: '4',
-        isLastLook: false
+        isLastLook: false,
     };
 
     it('should defer to quoter and return response for firm quote', async () => {
