@@ -40,6 +40,16 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             return { isValid: false, errors: [`Invalid protocol version: ${query.protocolVersion}.`] };
         }
 
+        // Exactly one of (buyAmountBaseUnits, sellAmountBaseUnits) must be present
+        if (Boolean(query.buyAmountBaseUnits) === Boolean(query.sellAmountBaseUnits)) {
+            return {
+                isValid: false,
+                errors: [
+                    'A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).',
+                ],
+            };
+        }
+
         // Querystring values are always returned as strings, therefore a boolean must be parsed as string.
         const canMakerControlSettlement = query.canMakerControlSettlement === 'true' ? true : undefined;
         const isLastLook = query.isLastLook === 'true';
@@ -50,6 +60,8 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             takerAddress: query.takerAddress,
             canMakerControlSettlement,
             comparisonPrice: query.comparisonPrice ? new BigNumber(query.comparisonPrice) : undefined,
+            sellAmountBaseUnits: query.sellAmountBaseUnits ? new BigNumber(query.sellAmountBaseUnits) : undefined,
+            buyAmountBaseUnits: query.buyAmountBaseUnits ? new BigNumber(query.buyAmountBaseUnits) : undefined,
         };
         const v4SpecificFields = {
             txOrigin: query.txOrigin!,
@@ -57,45 +69,19 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
         };
 
         let takerRequest: TakerRequest;
-
-        if (query.sellAmountBaseUnits !== undefined && query.buyAmountBaseUnits === undefined) {
-            if (protocolVersion === '3') {
-                takerRequest = {
-                    ...takerRequestBase,
-                    protocolVersion,
-                    sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
-                };
-            } else {
-                takerRequest = {
-                    ...takerRequestBase,
-                    ...v4SpecificFields,
-                    protocolVersion,
-                    sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
-                };
-            }
-        } else if (query.buyAmountBaseUnits !== undefined && query.sellAmountBaseUnits === undefined) {
-            if (protocolVersion === '3') {
-                takerRequest = {
-                    ...takerRequestBase,
-                    protocolVersion,
-                    buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
-                };
-            } else {
-                takerRequest = {
-                    ...takerRequestBase,
-                    ...v4SpecificFields,
-                    protocolVersion,
-                    buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
-                };
-            }
+        if (protocolVersion === '3') {
+            takerRequest = {
+                ...takerRequestBase,
+                protocolVersion,
+            };
         } else {
-            return {
-                isValid: false,
-                errors: [
-                    'A request must specify either a "buyAmountBaseUnits" or a "sellAmountBaseUnits" (but not both).',
-                ],
+            takerRequest = {
+                ...takerRequestBase,
+                ...v4SpecificFields,
+                protocolVersion,
             };
         }
+
         return { isValid: true, takerRequest };
     }
 
