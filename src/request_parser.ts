@@ -51,8 +51,13 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             canMakerControlSettlement,
             comparisonPrice: query.comparisonPrice ? new BigNumber(query.comparisonPrice) : undefined,
         };
+        const v4SpecificFields = {
+            txOrigin: query.txOrigin!,
+            isLastLook,
+        };
 
         let takerRequest: TakerRequest;
+
         if (query.sellAmountBaseUnits !== undefined && query.buyAmountBaseUnits === undefined) {
             if (protocolVersion === '3') {
                 takerRequest = {
@@ -63,10 +68,9 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             } else {
                 takerRequest = {
                     ...takerRequestBase,
+                    ...v4SpecificFields,
                     protocolVersion,
                     sellAmountBaseUnits: new BigNumber(query.sellAmountBaseUnits),
-                    txOrigin: query.txOrigin!,
-                    isLastLook,
                 };
             }
         } else if (query.buyAmountBaseUnits !== undefined && query.sellAmountBaseUnits === undefined) {
@@ -79,10 +83,9 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             } else {
                 takerRequest = {
                     ...takerRequestBase,
+                    ...v4SpecificFields,
                     protocolVersion,
                     buyAmountBaseUnits: new BigNumber(query.buyAmountBaseUnits),
-                    txOrigin: query.txOrigin!,
-                    isLastLook,
                 };
             }
         } else {
