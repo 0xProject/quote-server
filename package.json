@@ -1,6 +1,6 @@
 {
     "name": "@0x/quote-server",
-    "version": "4.0.1",
+    "version": "5.0.0",
     "description": "RFQ Quote server",
     "main": "lib/src/index.js",
     "types": "lib/src/index.d.ts",
