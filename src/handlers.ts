@@ -46,6 +46,7 @@ export const takerRequestHandler = async (
 
     const { protocolVersion, response } = await responsePromise;
     if (protocolVersion !== takerRequest.protocolVersion) {
+        /* tslint:disable-next-line */
         console.error('Response and request protocol versions do not match');
         return res
             .status(HttpStatus.NOT_IMPLEMENTED)

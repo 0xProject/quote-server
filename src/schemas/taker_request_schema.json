@@ -18,6 +18,10 @@
         },
         "txOrigin": {
             "$ref": "/addressSchema"
+        },
+        "isLastLook": {
+            "type": "string",
+            "pattern": "(^true$)|(^false$)"
         }
     },
     "required": ["sellTokenAddress", "buyTokenAddress", "takerAddress"],

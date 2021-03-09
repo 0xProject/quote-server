@@ -105,6 +105,24 @@ describe('parseTakerRequest', () => {
         expect(parsedRequest.isValid).to.eql(false);
     });
 
+    it('should fail validation if both buyAmountBaseUnits and sellAmountBaseUnits are present', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            buyAmountBaseUnits: '1225000000',
+            sellAmountBaseUnits: '1225000000',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        expect(parsedRequest.isValid).to.eql(false);
+    });
+
     it('should still validate without a comparison price', () => {
         const query = {
             sellTokenAddress: NULL_ADDRESS,
@@ -174,6 +192,34 @@ describe('parseTakerRequest', () => {
         }
     });
 
+    it('should handle v4 requests with isLastLook', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+            protocolVersion: '4',
+            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            isLastLook: 'true',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (parsedRequest.isValid) {
+            if (parsedRequest.takerRequest.protocolVersion === '4') {
+                expect(parsedRequest.takerRequest.isLastLook).to.equal(true);
+            } else {
+                expect.fail('Returned protocol version is not 4');
+            }
+        } else {
+            expect.fail('Parsed request is not valid');
+        }
+    });
+
     it('should fail version with an invalid protocol or txOrigin', () => {
         const tests: { protocolVersion: string; txOrigin?: string; expectedErrorMsg: string }[] = [
             {
@@ -216,7 +262,7 @@ describe('parseTakerRequest', () => {
 });
 
 describe('api key handler', () => {
-    it('reject when canMakerControlSettlement == false & no API key specified', () => {
+    it('reject when no API key specified', () => {
         const handler = generateApiKeyHandler();
         const req = httpMocks.createRequest();
         const resp = httpMocks.createResponse();
@@ -228,40 +274,9 @@ describe('api key handler', () => {
         expect(resp._getStatusCode()).to.eql(HttpStatus.UNAUTHORIZED);
         expect(resp._getJSONData()).to.eql({ errors: ['Invalid API key'] });
     });
-    it('accept when canMakerControlSettlement == false & API Key specified', () => {
+    it('accept when API Key specified', () => {
         const handler = generateApiKeyHandler();
         const req = httpMocks.createRequest({
-            headers: { '0x-api-key': 'cde' },
-        });
-        const resp = httpMocks.createResponse();
-
-        handler(req, resp, () => {
-            return;
-        });
-
-        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-    });
-    it('accept when canMakerControlSettlement == true & no API Key specified', () => {
-        const handler = generateApiKeyHandler();
-        const req = httpMocks.createRequest({
-            query: {
-                canMakerControlSettlement: true,
-            },
-        });
-        const resp = httpMocks.createResponse();
-
-        handler(req, resp, () => {
-            return;
-        });
-
-        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-    });
-    it('accept when canMakerControlSettlement == true & API Key specified', () => {
-        const handler = generateApiKeyHandler();
-        const req = httpMocks.createRequest({
-            query: {
-                canMakerControlSettlement: true,
-            },
             headers: { '0x-api-key': 'cde' },
         });
         const resp = httpMocks.createResponse();
@@ -279,9 +294,9 @@ describe('taker request handler', () => {
         buyTokenAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
         sellTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         buyAmountBaseUnits: new BigNumber(1000000000000000000),
+        sellAmountBaseUnits: undefined,
         takerAddress: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
         apiKey: 'kool-api-key',
-        canMakerControlSettlement: undefined,
         comparisonPrice: undefined,
         protocolVersion: '3',
     };
@@ -289,12 +304,13 @@ describe('taker request handler', () => {
         buyTokenAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
         sellTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         buyAmountBaseUnits: new BigNumber(1000000000000000000),
+        sellAmountBaseUnits: undefined,
         takerAddress: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
         apiKey: 'kool-api-key',
-        canMakerControlSettlement: undefined,
         comparisonPrice: undefined,
         txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
         protocolVersion: '4',
+        isLastLook: false,
     };
 
     it('should defer to quoter and return response for firm quote', async () => {
@@ -329,43 +345,7 @@ describe('taker request handler', () => {
 
         quoter.verifyAll();
     });
-    it('should succeed without an API key if `canMakerControlSettlement` is set to `true` when requesting a firm quote', async () => {
-        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
-        const expectedResponse: VersionedQuote<'3', V3RFQFirmQuote> = {
-            response: {
-                signedOrder: fakeV3Order,
-            },
-            protocolVersion: '3',
-        };
-        const takerRequest = {
-            ...fakeV3TakerRequest,
-            canMakerControlSettlement: true,
-            apiKey: undefined,
-        };
-        quoter
-            .setup(async q => q.fetchFirmQuoteAsync(takerRequest))
-            .returns(async () => expectedResponse)
-            .verifiable(TypeMoq.Times.once());
 
-        const req = httpMocks.createRequest({
-            query: {
-                buyTokenAddress: takerRequest.buyTokenAddress,
-                sellTokenAddress: takerRequest.sellTokenAddress,
-                // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: takerRequest.buyAmountBaseUnits!.toString(),
-                takerAddress: takerRequest.takerAddress,
-                canMakerControlSettlement: takerRequest.canMakerControlSettlement.toString(),
-            },
-        });
-        const resp = httpMocks.createResponse();
-
-        await takerRequestHandler('firm', quoter.object, req, resp);
-
-        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse.response)));
-
-        quoter.verifyAll();
-    });
     it('should defer to quoter and return response for indicative quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
 

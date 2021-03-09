@@ -2,7 +2,7 @@
 
 ## 2.0.2
 
--  Exported RFQT- and RFQ-M specific quote types.
+-   Exported RFQT- and RFQ-M specific quote types.
 
 ## 2.0.1
 
