@@ -105,6 +105,24 @@ describe('parseTakerRequest', () => {
         expect(parsedRequest.isValid).to.eql(false);
     });
 
+    it('should fail validation if both buyAmountBaseUnits and sellAmountBaseUnits are present', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            buyAmountBaseUnits: '1225000000',
+            sellAmountBaseUnits: '1225000000',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        expect(parsedRequest.isValid).to.eql(false);
+    });
+
     it('should still validate without a comparison price', () => {
         const query = {
             sellTokenAddress: NULL_ADDRESS,
