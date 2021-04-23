@@ -1,5 +1,5 @@
 // tslint:disable:no-non-null-assertion
-import { Schema, SchemaValidator } from '@0x/json-schemas';
+import { SchemaValidator } from '@0x/json-schemas';
 import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as express from 'express';
 
@@ -15,11 +15,9 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
 
     // Create schema validator
     const schemaValidator = new SchemaValidator();
-    // HACK(sk): for some reason, TS considers our oneOf as not a valid schema
-    const schema = (takerRequestSchema as unknown) as Schema;
 
-    const validationResult = schemaValidator.validate(query, schema);
-    if (validationResult.valid) {
+    const validationResult = schemaValidator.validate(query, takerRequestSchema);
+    if (!validationResult.errors) {
         let apiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
         if (typeof apiKey !== 'string') {
             apiKey = undefined;
@@ -83,7 +81,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
         return { isValid: true, takerRequest };
     }
 
-    const errors = validationResult.errors.map(e => e.toString());
+    const errors = validationResult.errors.map(e => `${e.dataPath} ${e.message!}`);
     return {
         isValid: false,
         errors,
@@ -96,11 +94,8 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
 
     // Create schema validator
     const schemaValidator = new SchemaValidator();
-    // HACK(sk): for some reason, TS considers our oneOf as not a valid schema
-    const schema = (submitRequestSchema as unknown) as Schema;
-
-    const validationResult = schemaValidator.validate(body, schema);
-    if (validationResult.valid) {
+    const validationResult = schemaValidator.validate(body, submitRequestSchema);
+    if (!validationResult.errors) {
         let apiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
         if (typeof apiKey !== 'string') {
             apiKey = undefined;

@@ -225,7 +225,7 @@ describe('parseTakerRequest', () => {
             {
                 protocolVersion: '4',
                 txOrigin: '0xfoo',
-                expectedErrorMsg: 'instance.txOrigin does not match pattern "^0x[0-9a-fA-F]{40}$"',
+                expectedErrorMsg: '.txOrigin should match pattern "^0x[0-9a-fA-F]{40}$"',
             },
             { protocolVersion: '4', txOrigin: NULL_ADDRESS, expectedErrorMsg: 'V4 queries require a valid "txOrigin"' },
             { protocolVersion: '4', txOrigin: undefined, expectedErrorMsg: 'V4 queries require a valid "txOrigin"' },
@@ -463,7 +463,7 @@ describe('taker request handler', () => {
         const returnedData = resp._getJSONData();
         expect(Object.keys(returnedData)).to.eql(['errors']);
         expect(returnedData.errors.length).to.eql(1);
-        expect(returnedData.errors[0]).to.eql('instance requires property "buyTokenAddress"');
+        expect(returnedData.errors[0]).to.eql(" should have required property 'buyTokenAddress'");
     });
     it('should handle a valid v4 request', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
