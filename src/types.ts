@@ -93,13 +93,16 @@ export interface Quoter {
 }
 
 export interface SubmitReceipt {
-    ethereumTransactionHash: string;
-    signedEthereumTransaction: string;
+    proceedWithFill: boolean, // must be true if maker agrees
+    fee: BigNumber,
+    signedOrderHash: string,
+
 }
 
 export interface SubmitRequest {
-    zeroExTransaction: ZeroExTransactionWithoutDomain;
-    signature: string;
+    order: V4RfqOrder;
+    orderHash: string;
+    fee: BigNumber;
     apiKey?: string;
 }
 

@@ -101,15 +101,25 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
             apiKey = undefined;
         }
         const submitRequest: SubmitRequest = {
-            zeroExTransaction: body.zeroExTransaction,
-            signature: body.signature,
+            fee: new BigNumber(body.fee),
+            order: {
+                ...body.order,
+                makerAmount: new BigNumber(body.order.makerAmount),
+                takerAmount: new BigNumber(body.order.takerAmount),
+                expiry: new BigNumber(body.order.expiry),
+                salt: new BigNumber(body.order.salt),
+            },
+            orderHash: body.orderHash,
             apiKey,
         };
 
         return { isValid: true, submitRequest };
     }
 
-    const errors = validationResult.errors.map(e => e.toString());
+    const errors = validationResult.errors.map((e) => {
+        const optionalDataPath = e.dataPath.length > 0 ? `${e.dataPath} `: '';
+        return `${optionalDataPath}${e.message!}`
+    });
     return {
         isValid: false,
         errors,
