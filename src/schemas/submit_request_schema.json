@@ -1,13 +1,16 @@
 {
     "id": "/SubmitRequestSchema",
     "properties": {
-        "signature": {
+        "orderHash": {
             "$ref": "/hexSchema"
         },
-        "zeroExTransaction": {
-            "$ref": "/zeroExTransactionSchema"
+        "order": {
+            "$ref": "/v4RfqOrderSchema"
+        },
+        "fee": {
+            "$ref": "/wholeNumberSchema"
         }
     },
-    "required": ["signature", "zeroExTransaction"],
+    "required": ["orderHash", "order", "fee"],
     "type": "object"
 }
