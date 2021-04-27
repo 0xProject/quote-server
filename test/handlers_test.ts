@@ -1,5 +1,6 @@
 // tslint:disable:max-file-line-count
 import { SignedOrder } from '@0x/order-utils';
+import { ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
 import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as chai from 'chai';
 import * as HttpStatus from 'http-status-codes';
@@ -11,6 +12,7 @@ import { generateApiKeyHandler, submitRequestHandler, takerRequestHandler } from
 import { parseTakerRequest } from '../src/request_parser';
 import {
     Quoter,
+    SubmitReceipt,
     SubmitRequest,
     TakerRequest,
     V3RFQFirmQuote,
@@ -43,23 +45,23 @@ const fakeV3Order: SignedOrder = {
 };
 
 const fakeV4Order: V4SignedRfqOrder = {
-    makerToken: '0xabc',
-    takerToken: '0xabc',
+    makerToken: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+    takerToken: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
     makerAmount: new BigNumber(1),
     takerAmount: new BigNumber(1),
-    maker: '0xabc',
-    taker: '0xabc',
+    maker: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+    taker: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
     txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
-    pool: '0x0000001',
+    pool: '0x00',
     expiry: new BigNumber(1000),
     salt: new BigNumber(1000),
     chainId: 1,
-    verifyingContract: '0xabc',
+    verifyingContract: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
     signature: {
         signatureType: 3,
         v: 27,
-        r: '0xblah',
-        s: '0xblah',
+        r: '0x00',
+        s: '0x00',
     },
 };
 
@@ -192,6 +194,31 @@ describe('parseTakerRequest', () => {
         }
     });
 
+    it('should raise an error for v4 requests with isLastLook but no fee', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+            protocolVersion: '4',
+            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            isLastLook: 'true',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (parsedRequest.isValid) {
+            expect.fail('Parsed request should not be valid');
+        } else {
+            expect(parsedRequest.errors.length).to.eql(1);
+            expect(parsedRequest.errors[0]).to.eql('When isLastLook is true, a fee must be present');
+        }
+    });
+
     it('should handle v4 requests with isLastLook', () => {
         const query = {
             sellTokenAddress: NULL_ADDRESS,
@@ -201,6 +228,10 @@ describe('parseTakerRequest', () => {
             protocolVersion: '4',
             txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
             isLastLook: 'true',
+            fee: {
+                amount: '300000',
+                token: ETH_TOKEN_ADDRESS,
+            }
         };
         const request = {
             query,
@@ -225,7 +256,7 @@ describe('parseTakerRequest', () => {
             {
                 protocolVersion: '4',
                 txOrigin: '0xfoo',
-                expectedErrorMsg: 'instance.txOrigin does not match pattern "^0x[0-9a-fA-F]{40}$"',
+                expectedErrorMsg: '.txOrigin should match pattern "^0x[0-9a-fA-F]{40}$"',
             },
             { protocolVersion: '4', txOrigin: NULL_ADDRESS, expectedErrorMsg: 'V4 queries require a valid "txOrigin"' },
             { protocolVersion: '4', txOrigin: undefined, expectedErrorMsg: 'V4 queries require a valid "txOrigin"' },
@@ -463,7 +494,7 @@ describe('taker request handler', () => {
         const returnedData = resp._getJSONData();
         expect(Object.keys(returnedData)).to.eql(['errors']);
         expect(returnedData.errors.length).to.eql(1);
-        expect(returnedData.errors[0]).to.eql('instance requires property "buyTokenAddress"');
+        expect(returnedData.errors[0]).to.eql(" should have required property 'buyTokenAddress'");
     });
     it('should handle a valid v4 request', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
@@ -502,30 +533,32 @@ describe('taker request handler', () => {
 });
 
 describe('submit request handler', () => {
-    const zeroExTransaction = {
-        data:
-            '0x8bc8efb300000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000002faf080000000000000000000000000000000000000000000000000000000000000034000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000cb744534a44083acd8c3b0b0b2d6e06faa50b9aa0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a258b39954cef5cb142fd567a46cddb31a6701240000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000069457702803400000000000000000000000000000000000000000000000000007a1fe160277000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005eb5173600000000000000000000000000000000000000000000000000000171bfeb2a4900000000000000000000000000000000000000000000000000000000000001c00000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002800000000000000000000000000000000000000000000000000000000000000024f47261b0000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000024f47261b00000000000000000000000009f8f72aa9304c8b593d555f12ef6589cc3a579a20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000421cee48f5cc8bf3f1c1d0f06d724c24fc907859af20cabb9fc6e97938ddaca27b7a638f7b2bf90dd21aa267e5bc89feca1dcc9703f0469a52fc77d554e85861d76003000000000000000000000000000000000000000000000000000000000000',
-        salt: new BigNumber('77292819507578364752487536887331696181649044658387068392183080209514782056821'),
-        signerAddress: '0x75be4f78aa3699b3a348c84bdb2a96c3dbb5e2ef',
-        gasPrice: new BigNumber(16000000000),
-        expirationTimeSeconds: new BigNumber(1588762397),
-        domain: {
-            chainId: 1,
-            verifyingContract: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
-        },
-    };
-    const signature =
-        '0x1bee9981f3b24eaebed1b1af822fc91cbab9f5e3567a1291d09bcb02129a51252808c9db2c770a7120bf54e52f088e5b34b6d8abe84e1960fa1a37b8372bd1d49703';
-    const fakeSubmitRequest: SubmitRequest = {
-        zeroExTransaction,
-        signature,
-        apiKey: 'kool-api-key',
+    const { signature, ...restOrder } = fakeV4Order;
+    const order = {
+        ...restOrder,
+        makerAmount: new BigNumber(restOrder.makerAmount),
+        takerAmount: new BigNumber(restOrder.takerAmount),
+        expiry: new BigNumber(restOrder.expiry),
+        salt: new BigNumber(restOrder.salt),
     };
 
-    const expectedSuccessResponse = {
-        ethereumTransactionHash: '0x3ab9fa039c0152398421988b40640299862213f2ec71876262cd9dd5fff4d2a8',
-        signedEthereumTransaction:
-            '0xf906120e8503b9aca00083037a989461935cbdd02287b511119ddb11aeb42f1593b7ef870886c98b760000b905a42280c91000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000520aae22f7f36feb12ac171d654beb2cb01cfd1269fd14cbc0d19b5449c7dace175000000000000000000000000000000000000000000000000000000005eb2971d00000000000000000000000000000000000000000000000000000003b9aca00000000000000000000000000075be4f78aa3699b3a348c84bdb2a96c3dbb5e2ef00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000004048bc8efb300000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000002faf080000000000000000000000000000000000000000000000000000000000000034000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000cb744534a44083acd8c3b0b0b2d6e06faa50b9aa0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a258b39954cef5cb142fd567a46cddb31a6701240000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000069457702803400000000000000000000000000000000000000000000000000007a1fe160277000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005eb5173600000000000000000000000000000000000000000000000000000171bfeb2a4900000000000000000000000000000000000000000000000000000000000001c00000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002800000000000000000000000000000000000000000000000000000000000000024f47261b0000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000024f47261b00000000000000000000000009f8f72aa9304c8b593d555f12ef6589cc3a579a20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000421cee48f5cc8bf3f1c1d0f06d724c24fc907859af20cabb9fc6e97938ddaca27b7a638f7b2bf90dd21aa267e5bc89feca1dcc9703f0469a52fc77d554e85861d760030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000421bee9981f3b24eaebed1b13f828fc91cbab9f5e356701291d09bcba2129a51252808c9db2c770e7120bf54e52f088e5b34b6d8abe84e1960fa1a37b8372bd1d4970300000000000000000000000000000000000000000000000000000000000025a01fd71a2237d9af0cfed0560102ddf22b546dce41db58e05a268504be8df34221a023b0684734d040d7730a39e58a5052fdca1faf68a3b522dbb10f178523f771f4',
+    const fakeSubmitRequest: SubmitRequest = {
+        order,
+        orderHash: '0xf000',
+        apiKey: 'kool-api-key',
+        fee: {
+            amount: new BigNumber('0'),
+            token: ETH_TOKEN_ADDRESS,
+        }
+    };
+
+    const expectedSuccessResponse: SubmitReceipt = {
+        fee: {
+            amount: new BigNumber(0),
+            token: ETH_TOKEN_ADDRESS,
+        },
+        proceedWithFill: true,
+        signedOrderHash: '0xf000',
     };
 
     it('should defer to quoter and return response for submit request', async () => {
@@ -537,36 +570,14 @@ describe('submit request handler', () => {
 
         const req = httpMocks.createRequest({
             body: {
-                zeroExTransaction,
-                signature,
+                order,
+                orderHash: '0xf000',
+                fee: {
+                    amount: '0',
+                    token: ETH_TOKEN_ADDRESS,
+                }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
-        });
-        const resp = httpMocks.createResponse();
-
-        await submitRequestHandler(quoter.object, req, resp);
-
-        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedSuccessResponse)));
-
-        quoter.verifyAll();
-    });
-    it('should succeed without an API key when submitting a fill', async () => {
-        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
-        const fakeSubmitRequestWithoutApiKey = {
-            ...fakeSubmitRequest,
-            apiKey: undefined,
-        };
-        quoter
-            .setup(async q => q.submitFillAsync(fakeSubmitRequestWithoutApiKey))
-            .returns(async () => expectedSuccessResponse)
-            .verifiable(TypeMoq.Times.once());
-
-        const req = httpMocks.createRequest({
-            body: {
-                zeroExTransaction,
-                signature,
-            },
         });
         const resp = httpMocks.createResponse();
 
@@ -582,7 +593,11 @@ describe('submit request handler', () => {
 
         const req = httpMocks.createRequest({
             body: {
-                zeroExTransaction,
+                order,
+                fee: {
+                    amount: '0',
+                    token: ETH_TOKEN_ADDRESS,
+                }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
         });
@@ -593,7 +608,7 @@ describe('submit request handler', () => {
         const returnedData = resp._getJSONData();
         expect(Object.keys(returnedData)).to.eql(['errors']);
         expect(returnedData.errors.length).to.eql(1);
-        expect(returnedData.errors[0]).to.eql('instance requires property "signature"');
+        expect(returnedData.errors[0]).to.eql("should have required property 'orderHash'");
     });
     it('should handle empty indicative quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
@@ -604,8 +619,12 @@ describe('submit request handler', () => {
 
         const req = httpMocks.createRequest({
             body: {
-                zeroExTransaction,
-                signature,
+                order,
+                orderHash: '0xf000',
+                fee: {
+                    amount: '0',
+                    token: ETH_TOKEN_ADDRESS,
+                }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
         });

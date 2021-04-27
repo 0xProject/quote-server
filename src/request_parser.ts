@@ -1,25 +1,31 @@
 // tslint:disable:no-non-null-assertion
-import { Schema, SchemaValidator } from '@0x/json-schemas';
+import { SchemaValidator } from '@0x/json-schemas';
 import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as express from 'express';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
+import * as feeSchema from './schemas/fee.json';
 import * as submitRequestSchema from './schemas/submit_request_schema.json';
 import * as takerRequestSchema from './schemas/taker_request_schema.json';
-import { BaseTakerRequest, SubmitRequest, SupportedVersion, TakerRequest, TakerRequestQueryParams } from './types';
+import {
+    BaseTakerRequest,
+    SubmitRequest,
+    SupportedVersion,
+    TakerRequest,
+    TakerRequestQueryParams,
+    V4TakerRequest,
+} from './types';
 
 type ParsedTakerRequest = { isValid: true; takerRequest: TakerRequest } | { isValid: false; errors: string[] };
+
+const schemaValidator = new SchemaValidator();
+schemaValidator.addSchema(feeSchema);
 
 export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'>): ParsedTakerRequest => {
     const query: TakerRequestQueryParams = req.query;
 
-    // Create schema validator
-    const schemaValidator = new SchemaValidator();
-    // HACK(sk): for some reason, TS considers our oneOf as not a valid schema
-    const schema = (takerRequestSchema as unknown) as Schema;
-
-    const validationResult = schemaValidator.validate(query, schema);
-    if (validationResult.valid) {
+    const validationResult = schemaValidator.validate(query, takerRequestSchema);
+    if (!validationResult.errors) {
         let apiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
         if (typeof apiKey !== 'string') {
             apiKey = undefined;
@@ -61,10 +67,22 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             sellAmountBaseUnits: query.sellAmountBaseUnits ? new BigNumber(query.sellAmountBaseUnits) : undefined,
             buyAmountBaseUnits: query.buyAmountBaseUnits ? new BigNumber(query.buyAmountBaseUnits) : undefined,
         };
-        const v4SpecificFields = {
+        const v4SpecificFields: Pick<V4TakerRequest, 'txOrigin' | 'isLastLook' | 'fee'> = {
             txOrigin: query.txOrigin!,
             isLastLook,
         };
+        if (isLastLook) {
+            if (!query.fee) {
+                return {
+                    isValid: false,
+                    errors: [`When isLastLook is true, a fee must be present`],
+                };
+            }
+            v4SpecificFields.fee = {
+                token: query.fee.token,
+                amount: new BigNumber(query.fee.amount),
+            }
+        }
 
         let takerRequest: TakerRequest;
         if (protocolVersion === '3') {
@@ -83,7 +101,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
         return { isValid: true, takerRequest };
     }
 
-    const errors = validationResult.errors.map(e => e.toString());
+    const errors = validationResult.errors.map(e => `${e.dataPath} ${e.message}`);
     return {
         isValid: false,
         errors,
@@ -95,26 +113,35 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
     const body = req.body;
 
     // Create schema validator
-    const schemaValidator = new SchemaValidator();
-    // HACK(sk): for some reason, TS considers our oneOf as not a valid schema
-    const schema = (submitRequestSchema as unknown) as Schema;
-
-    const validationResult = schemaValidator.validate(body, schema);
-    if (validationResult.valid) {
+    const validationResult = schemaValidator.validate(body, submitRequestSchema);
+    if (!validationResult.errors) {
         let apiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
         if (typeof apiKey !== 'string') {
             apiKey = undefined;
         }
         const submitRequest: SubmitRequest = {
-            zeroExTransaction: body.zeroExTransaction,
-            signature: body.signature,
+            fee: {
+                amount: new BigNumber(body.fee.amount),
+                token: body.fee.token,
+            },
+            order: {
+                ...body.order,
+                makerAmount: new BigNumber(body.order.makerAmount),
+                takerAmount: new BigNumber(body.order.takerAmount),
+                expiry: new BigNumber(body.order.expiry),
+                salt: new BigNumber(body.order.salt),
+            },
+            orderHash: body.orderHash,
             apiKey,
         };
 
         return { isValid: true, submitRequest };
     }
 
-    const errors = validationResult.errors.map(e => e.toString());
+    const errors = validationResult.errors.map(e => {
+        const optionalDataPath = e.dataPath.length > 0 ? `${e.dataPath} ` : '';
+        return `${optionalDataPath}${e.message}`;
+    });
     return {
         isValid: false,
         errors,
