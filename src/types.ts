@@ -13,6 +13,11 @@ export interface V4SignedRfqOrder extends V4RfqOrder {
     signature: V4Signature;
 }
 
+export interface Fee {
+    token: string;
+    amount: BigNumber;
+}
+
 export interface BaseTakerRequest {
     sellTokenAddress: string;
     buyTokenAddress: string;
@@ -31,7 +36,7 @@ export interface V4TakerRequest extends BaseTakerRequest {
     protocolVersion: '4';
     txOrigin: string;
     isLastLook: boolean;
-    fee?: BigNumber;
+    fee?: Fee;
 }
 
 export type TakerRequest = V3TakerRequest | V4TakerRequest;
@@ -47,7 +52,10 @@ export type TakerRequestQueryParams = RequireOnlyOne<
         protocolVersion?: string;
         txOrigin?: string;
         isLastLook?: string;
-        fee?: string;
+        fee?: {
+            token: string;
+            amount: string;
+        };
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
@@ -96,20 +104,15 @@ export interface Quoter {
 
 export interface SubmitReceipt {
     proceedWithFill: boolean; // must be true if maker agrees
-    fee: BigNumber;
+    fee: Fee;
     signedOrderHash: string;
 }
 
 export interface SubmitRequest {
     order: V4RfqOrder;
     orderHash: string;
-    fee: BigNumber;
+    fee: Fee;
     apiKey?: string;
-}
-
-export interface SubmitRequestBody {
-    zeroExTransaction: ZeroExTransactionWithoutDomain;
-    signature: string;
 }
 
 export interface ZeroExTransactionWithoutDomain {

@@ -8,7 +8,7 @@
             "$ref": "/v4RfqOrderSchema"
         },
         "fee": {
-            "$ref": "/wholeNumberSchema"
+            "$ref": "/feeSchema"
         }
     },
     "required": ["orderHash", "order", "fee"],

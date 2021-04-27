@@ -1,5 +1,6 @@
 // tslint:disable:max-file-line-count
 import { SignedOrder } from '@0x/order-utils';
+import { ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
 import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as chai from 'chai';
 import * as HttpStatus from 'http-status-codes';
@@ -227,7 +228,10 @@ describe('parseTakerRequest', () => {
             protocolVersion: '4',
             txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
             isLastLook: 'true',
-            fee: '300000',
+            fee: {
+                amount: '300000',
+                token: ETH_TOKEN_ADDRESS,
+            }
         };
         const request = {
             query,
@@ -542,11 +546,17 @@ describe('submit request handler', () => {
         order,
         orderHash: '0xf000',
         apiKey: 'kool-api-key',
-        fee: new BigNumber(0),
+        fee: {
+            amount: new BigNumber('0'),
+            token: ETH_TOKEN_ADDRESS,
+        }
     };
 
     const expectedSuccessResponse: SubmitReceipt = {
-        fee: new BigNumber(0),
+        fee: {
+            amount: new BigNumber(0),
+            token: ETH_TOKEN_ADDRESS,
+        },
         proceedWithFill: true,
         signedOrderHash: '0xf000',
     };
@@ -562,7 +572,10 @@ describe('submit request handler', () => {
             body: {
                 order,
                 orderHash: '0xf000',
-                fee: '0',
+                fee: {
+                    amount: '0',
+                    token: ETH_TOKEN_ADDRESS,
+                }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
         });
@@ -581,7 +594,10 @@ describe('submit request handler', () => {
         const req = httpMocks.createRequest({
             body: {
                 order,
-                fee: '0',
+                fee: {
+                    amount: '0',
+                    token: ETH_TOKEN_ADDRESS,
+                }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
         });
@@ -605,7 +621,10 @@ describe('submit request handler', () => {
             body: {
                 order,
                 orderHash: '0xf000',
-                fee: '0',
+                fee: {
+                    amount: '0',
+                    token: ETH_TOKEN_ADDRESS,
+                }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
         });

@@ -24,7 +24,7 @@
             "pattern": "(^true$)|(^false$)"
         },
         "fee": {
-            "$ref": "/numberSchema"
+            "$ref": "/feeSchema"
         }
     },
     "required": ["sellTokenAddress", "buyTokenAddress", "takerAddress"],

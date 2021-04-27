@@ -4,6 +4,7 @@ import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as express from 'express';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
+import * as feeSchema from './schemas/fee.json';
 import * as submitRequestSchema from './schemas/submit_request_schema.json';
 import * as takerRequestSchema from './schemas/taker_request_schema.json';
 import {
@@ -17,11 +18,11 @@ import {
 
 type ParsedTakerRequest = { isValid: true; takerRequest: TakerRequest } | { isValid: false; errors: string[] };
 
+const schemaValidator = new SchemaValidator();
+schemaValidator.addSchema(feeSchema);
+
 export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'>): ParsedTakerRequest => {
     const query: TakerRequestQueryParams = req.query;
-
-    // Create schema validator
-    const schemaValidator = new SchemaValidator();
 
     const validationResult = schemaValidator.validate(query, takerRequestSchema);
     if (!validationResult.errors) {
@@ -77,7 +78,10 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
                     errors: [`When isLastLook is true, a fee must be present`],
                 };
             }
-            v4SpecificFields.fee = new BigNumber(query.fee);
+            v4SpecificFields.fee = {
+                token: query.fee.token,
+                amount: new BigNumber(query.fee.amount),
+            }
         }
 
         let takerRequest: TakerRequest;
@@ -109,7 +113,6 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
     const body = req.body;
 
     // Create schema validator
-    const schemaValidator = new SchemaValidator();
     const validationResult = schemaValidator.validate(body, submitRequestSchema);
     if (!validationResult.errors) {
         let apiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
@@ -117,7 +120,10 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
             apiKey = undefined;
         }
         const submitRequest: SubmitRequest = {
-            fee: new BigNumber(body.fee),
+            fee: {
+                amount: new BigNumber(body.fee.amount),
+                token: body.fee.token,
+            },
             order: {
                 ...body.order,
                 makerAmount: new BigNumber(body.order.makerAmount),

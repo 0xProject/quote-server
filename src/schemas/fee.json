@@ -1,0 +1,13 @@
+{
+    "id": "/feeSchema",
+    "properties": {
+        "amount": {
+            "$ref": "/wholeNumberSchema"
+        },
+        "token": {
+            "$ref": "/addressSchema"
+        }
+    },
+    "required": ["amount", "token"],
+    "type": "object"
+}
