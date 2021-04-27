@@ -358,7 +358,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line: no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -403,7 +403,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line: no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -431,7 +431,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -458,7 +458,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -478,7 +478,7 @@ describe('taker request handler', () => {
             query: {
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -510,7 +510,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV4TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV4TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeV4TakerRequest.buyAmountBaseUnits.toString(),
+                buyAmountBaseUnits: fakeV4TakerRequest.buyAmountBaseUnits!.toString(),
                 takerAddress: fakeV4TakerRequest.takerAddress,
                 txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
                 protocolVersion: '4',
