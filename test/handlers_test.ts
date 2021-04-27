@@ -193,6 +193,31 @@ describe('parseTakerRequest', () => {
         }
     });
 
+    it('should raise an error for v4 requests with isLastLook but no fee', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+            protocolVersion: '4',
+            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            isLastLook: 'true',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (parsedRequest.isValid) {
+            expect.fail('Parsed request should not be valid');
+        } else {
+            expect(parsedRequest.errors.length).to.eql(1);
+            expect(parsedRequest.errors[0]).to.eql("When isLastLook is true, a fee must be present");
+        }
+    });
+
     it('should handle v4 requests with isLastLook', () => {
         const query = {
             sellTokenAddress: NULL_ADDRESS,

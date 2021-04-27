@@ -68,7 +68,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
                 return {
                     isValid: false,
                     errors: [
-                        `when isLastLook is true, a fee must be present`,
+                        `When isLastLook is true, a fee must be present`,
                     ]
                 };
             }
