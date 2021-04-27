@@ -16,6 +16,7 @@ export interface V4SignedRfqOrder extends V4RfqOrder {
 export interface Fee {
     token: string;
     amount: BigNumber;
+    feeType: 'fixed' | 'bps';
 }
 
 export interface BaseTakerRequest {
@@ -55,6 +56,7 @@ export type TakerRequestQueryParams = RequireOnlyOne<
         fee?: {
             token: string;
             amount: string;
+            feeType: string;
         };
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
