@@ -202,6 +202,7 @@ describe('parseTakerRequest', () => {
             protocolVersion: '4',
             txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
             isLastLook: 'true',
+            fee: '300000'
         };
         const request = {
             query,

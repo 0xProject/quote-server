@@ -6,7 +6,7 @@ import * as express from 'express';
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
 import * as submitRequestSchema from './schemas/submit_request_schema.json';
 import * as takerRequestSchema from './schemas/taker_request_schema.json';
-import { BaseTakerRequest, SubmitRequest, SupportedVersion, TakerRequest, TakerRequestQueryParams } from './types';
+import { BaseTakerRequest, SubmitRequest, SupportedVersion, TakerRequest, TakerRequestQueryParams, V4TakerRequest } from './types';
 
 type ParsedTakerRequest = { isValid: true; takerRequest: TakerRequest } | { isValid: false; errors: string[] };
 
@@ -59,10 +59,21 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             sellAmountBaseUnits: query.sellAmountBaseUnits ? new BigNumber(query.sellAmountBaseUnits) : undefined,
             buyAmountBaseUnits: query.buyAmountBaseUnits ? new BigNumber(query.buyAmountBaseUnits) : undefined,
         };
-        const v4SpecificFields = {
+        const v4SpecificFields: Pick<V4TakerRequest, 'txOrigin' | 'isLastLook' | 'fee'> = {
             txOrigin: query.txOrigin!,
             isLastLook,
         };
+        if (isLastLook) {
+            if (!query.fee) {
+                return {
+                    isValid: false,
+                    errors: [
+                        `when isLastLook is true, a fee must be present`,
+                    ]
+                };
+            }
+            v4SpecificFields.fee = new BigNumber(query.fee);
+        }
 
         let takerRequest: TakerRequest;
         if (protocolVersion === '3') {

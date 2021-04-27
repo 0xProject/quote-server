@@ -22,6 +22,9 @@
         "isLastLook": {
             "type": "string",
             "pattern": "(^true$)|(^false$)"
+        },
+        "fee": {
+            "$ref": "/numberSchema"
         }
     },
     "required": ["sellTokenAddress", "buyTokenAddress", "takerAddress"],

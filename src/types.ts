@@ -31,6 +31,7 @@ export interface V4TakerRequest extends BaseTakerRequest {
     protocolVersion: '4';
     txOrigin: string;
     isLastLook: boolean;
+    fee?: BigNumber;
 }
 
 export type TakerRequest = V3TakerRequest | V4TakerRequest;
@@ -46,6 +47,7 @@ export type TakerRequestQueryParams = RequireOnlyOne<
         protocolVersion?: string;
         txOrigin?: string;
         isLastLook?: string;
+        fee?: string;
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
