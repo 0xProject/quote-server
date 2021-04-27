@@ -4,10 +4,14 @@
         "amount": {
             "$ref": "/wholeNumberSchema"
         },
+        "feeType": {
+            "type": "string",
+            "pattern": "(^fixed$)|(^bps$)"
+        },
         "token": {
             "$ref": "/addressSchema"
         }
     },
-    "required": ["amount", "token"],
+    "required": ["amount", "token", "feeType"],
     "type": "object"
 }

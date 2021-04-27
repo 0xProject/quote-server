@@ -231,6 +231,7 @@ describe('parseTakerRequest', () => {
             fee: {
                 amount: '300000',
                 token: ETH_TOKEN_ADDRESS,
+                feeType: 'fixed',
             }
         };
         const request = {
@@ -549,6 +550,7 @@ describe('submit request handler', () => {
         fee: {
             amount: new BigNumber('0'),
             token: ETH_TOKEN_ADDRESS,
+            feeType: 'fixed',
         }
     };
 
@@ -556,6 +558,7 @@ describe('submit request handler', () => {
         fee: {
             amount: new BigNumber(0),
             token: ETH_TOKEN_ADDRESS,
+            feeType: 'fixed',
         },
         proceedWithFill: true,
         signedOrderHash: '0xf000',
@@ -575,6 +578,7 @@ describe('submit request handler', () => {
                 fee: {
                     amount: '0',
                     token: ETH_TOKEN_ADDRESS,
+                    feeType: 'fixed',
                 }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
@@ -597,6 +601,7 @@ describe('submit request handler', () => {
                 fee: {
                     amount: '0',
                     token: ETH_TOKEN_ADDRESS,
+                    feeType: 'fixed',
                 }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
@@ -624,6 +629,7 @@ describe('submit request handler', () => {
                 fee: {
                     amount: '0',
                     token: ETH_TOKEN_ADDRESS,
+                    feeType: 'fixed',
                 }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },

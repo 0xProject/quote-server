@@ -72,7 +72,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             isLastLook,
         };
         if (isLastLook) {
-            if (!query.fee) {
+            if (!query.fee || (query.fee.feeType !== 'bps' && query.fee.feeType !== 'fixed')){
                 return {
                     isValid: false,
                     errors: [`When isLastLook is true, a fee must be present`],
@@ -81,6 +81,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             v4SpecificFields.fee = {
                 token: query.fee.token,
                 amount: new BigNumber(query.fee.amount),
+                feeType: query.fee.feeType,
             }
         }
 
@@ -123,6 +124,7 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
             fee: {
                 amount: new BigNumber(body.fee.amount),
                 token: body.fee.token,
+                feeType: body.fee.feeType,
             },
             order: {
                 ...body.order,
