@@ -95,10 +95,9 @@ export interface Quoter {
 }
 
 export interface SubmitReceipt {
-    proceedWithFill: boolean, // must be true if maker agrees
-    fee: BigNumber,
-    signedOrderHash: string,
-
+    proceedWithFill: boolean; // must be true if maker agrees
+    fee: BigNumber;
+    signedOrderHash: string;
 }
 
 export interface SubmitRequest {

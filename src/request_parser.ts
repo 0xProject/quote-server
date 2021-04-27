@@ -6,7 +6,14 @@ import * as express from 'express';
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
 import * as submitRequestSchema from './schemas/submit_request_schema.json';
 import * as takerRequestSchema from './schemas/taker_request_schema.json';
-import { BaseTakerRequest, SubmitRequest, SupportedVersion, TakerRequest, TakerRequestQueryParams, V4TakerRequest } from './types';
+import {
+    BaseTakerRequest,
+    SubmitRequest,
+    SupportedVersion,
+    TakerRequest,
+    TakerRequestQueryParams,
+    V4TakerRequest,
+} from './types';
 
 type ParsedTakerRequest = { isValid: true; takerRequest: TakerRequest } | { isValid: false; errors: string[] };
 
@@ -67,9 +74,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             if (!query.fee) {
                 return {
                     isValid: false,
-                    errors: [
-                        `When isLastLook is true, a fee must be present`,
-                    ]
+                    errors: [`When isLastLook is true, a fee must be present`],
                 };
             }
             v4SpecificFields.fee = new BigNumber(query.fee);
@@ -92,7 +97,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
         return { isValid: true, takerRequest };
     }
 
-    const errors = validationResult.errors.map(e => `${e.dataPath} ${e.message!}`);
+    const errors = validationResult.errors.map(e => `${e.dataPath} ${e.message}`);
     return {
         isValid: false,
         errors,
@@ -127,9 +132,9 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
         return { isValid: true, submitRequest };
     }
 
-    const errors = validationResult.errors.map((e) => {
-        const optionalDataPath = e.dataPath.length > 0 ? `${e.dataPath} `: '';
-        return `${optionalDataPath}${e.message!}`
+    const errors = validationResult.errors.map(e => {
+        const optionalDataPath = e.dataPath.length > 0 ? `${e.dataPath} ` : '';
+        return `${optionalDataPath}${e.message}`;
     });
     return {
         isValid: false,

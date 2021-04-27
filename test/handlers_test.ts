@@ -214,7 +214,7 @@ describe('parseTakerRequest', () => {
             expect.fail('Parsed request should not be valid');
         } else {
             expect(parsedRequest.errors.length).to.eql(1);
-            expect(parsedRequest.errors[0]).to.eql("When isLastLook is true, a fee must be present");
+            expect(parsedRequest.errors[0]).to.eql('When isLastLook is true, a fee must be present');
         }
     });
 
@@ -227,7 +227,7 @@ describe('parseTakerRequest', () => {
             protocolVersion: '4',
             txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
             isLastLook: 'true',
-            fee: '300000'
+            fee: '300000',
         };
         const request = {
             query,
@@ -358,7 +358,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line: no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -403,7 +403,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line: no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -431,7 +431,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -458,7 +458,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV3TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -478,7 +478,7 @@ describe('taker request handler', () => {
             query: {
                 sellTokenAddress: fakeV3TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits!.toString(),
+                buyAmountBaseUnits: fakeV3TakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeV3TakerRequest.takerAddress,
             },
             headers: { '0x-api-key': fakeV3TakerRequest.apiKey },
@@ -510,7 +510,7 @@ describe('taker request handler', () => {
                 buyTokenAddress: fakeV4TakerRequest.buyTokenAddress,
                 sellTokenAddress: fakeV4TakerRequest.sellTokenAddress,
                 // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeV4TakerRequest.buyAmountBaseUnits!.toString(),
+                buyAmountBaseUnits: fakeV4TakerRequest.buyAmountBaseUnits.toString(),
                 takerAddress: fakeV4TakerRequest.takerAddress,
                 txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
                 protocolVersion: '4',
@@ -529,7 +529,7 @@ describe('taker request handler', () => {
 });
 
 describe('submit request handler', () => {
-    const {signature, ...restOrder} = fakeV4Order;
+    const { signature, ...restOrder } = fakeV4Order;
     const order = {
         ...restOrder,
         makerAmount: new BigNumber(restOrder.makerAmount),
@@ -538,18 +538,6 @@ describe('submit request handler', () => {
         salt: new BigNumber(restOrder.salt),
     };
 
-    const zeroExTransaction = {
-        data:
-            '0x8bc8efb300000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000002faf080000000000000000000000000000000000000000000000000000000000000034000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000cb744534a44083acd8c3b0b0b2d6e06faa50b9aa0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a258b39954cef5cb142fd567a46cddb31a6701240000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000069457702803400000000000000000000000000000000000000000000000000007a1fe160277000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005eb5173600000000000000000000000000000000000000000000000000000171bfeb2a4900000000000000000000000000000000000000000000000000000000000001c00000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002800000000000000000000000000000000000000000000000000000000000000024f47261b0000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000024f47261b00000000000000000000000009f8f72aa9304c8b593d555f12ef6589cc3a579a20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000421cee48f5cc8bf3f1c1d0f06d724c24fc907859af20cabb9fc6e97938ddaca27b7a638f7b2bf90dd21aa267e5bc89feca1dcc9703f0469a52fc77d554e85861d76003000000000000000000000000000000000000000000000000000000000000',
-        salt: new BigNumber('77292819507578364752487536887331696181649044658387068392183080209514782056821'),
-        signerAddress: '0x75be4f78aa3699b3a348c84bdb2a96c3dbb5e2ef',
-        gasPrice: new BigNumber(16000000000),
-        expirationTimeSeconds: new BigNumber(1588762397),
-        domain: {
-            chainId: 1,
-            verifyingContract: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
-        },
-    };
     const fakeSubmitRequest: SubmitRequest = {
         order,
         orderHash: '0xf000',
