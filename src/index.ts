@@ -5,7 +5,6 @@ export {
     Quoter,
     SubmitReceipt,
     SubmitRequest,
-    SubmitRequestQueryParamsUnnested,
     TakerRequestQueryParamsUnnested,
     V3RFQIndicativeQuote,
     V3RFQFirmQuote,

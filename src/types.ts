@@ -128,14 +128,6 @@ export interface SubmitReceipt {
     signedOrderHash: string;
 }
 
-export interface SubmitRequestQueryParamsUnnested {
-    orderHash: string,
-    order: any,
-    feeToken: string,
-    feeAmount: string,
-    feeType: string
-};
-
 export interface SubmitRequest {
     order: V4RfqOrder;
     orderHash: string;
