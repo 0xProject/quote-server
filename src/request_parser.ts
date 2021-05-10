@@ -25,6 +25,8 @@ schemaValidator.addSchema(feeSchema);
 export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'>): ParsedTakerRequest => {
     const queryUnnested: TakerRequestQueryParamsUnnested = req.query;
     const {feeAmount, feeToken, feeType, ...rest} = queryUnnested;
+
+    // NOTE: Here we are un-flattening query parameters. GET query parameters are usually a single level key/value store.
     const query: TakerRequestQueryParamsNested = rest;
     if (feeType && feeToken && feeAmount) {
         query.fee = {
