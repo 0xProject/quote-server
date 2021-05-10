@@ -136,16 +136,6 @@ export interface SubmitRequestQueryParamsUnnested {
     feeType: string
 };
 
-export interface SubmitRequestQueryParamsNested {
-    orderHash: string,
-    order: any,
-    fee: {
-        token: string,
-        amount: string,
-        type: string
-    }
-};
-
 export interface SubmitRequest {
     order: V4RfqOrder;
     orderHash: string;

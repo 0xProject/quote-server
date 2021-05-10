@@ -10,8 +10,6 @@ import * as takerRequestSchema from './schemas/taker_request_schema.json';
 import {
     BaseTakerRequest,
     SubmitRequest,
-    SubmitRequestQueryParamsNested,
-    SubmitRequestQueryParamsUnnested,
     SupportedVersion,
     TakerRequest,
     TakerRequestQueryParamsNested,
