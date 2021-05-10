@@ -12,7 +12,8 @@ import {
     SubmitRequest,
     SupportedVersion,
     TakerRequest,
-    TakerRequestQueryParams,
+    TakerRequestQueryParamsNested,
+    TakerRequestQueryParamsUnnested,
     V4TakerRequest,
 } from './types';
 
@@ -22,7 +23,18 @@ const schemaValidator = new SchemaValidator();
 schemaValidator.addSchema(feeSchema);
 
 export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'>): ParsedTakerRequest => {
-    const query: TakerRequestQueryParams = req.query;
+    const queryUnnested: TakerRequestQueryParamsUnnested = req.query;
+    const {feeAmount, feeToken, feeType, ...rest} = queryUnnested;
+
+    // NOTE: Here we are un-flattening query parameters. GET query parameters are usually a single level key/value store.
+    const query: TakerRequestQueryParamsNested = rest;
+    if (feeType && feeToken && feeAmount) {
+        query.fee = {
+            amount: feeAmount,
+            token: feeToken,
+            type: feeType,
+        };
+    }
 
     const validationResult = schemaValidator.validate(query, takerRequestSchema);
     if (!validationResult.errors) {
@@ -72,7 +84,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             isLastLook,
         };
         if (isLastLook) {
-            if (!query.fee || (query.fee.feeType !== 'bps' && query.fee.feeType !== 'fixed')){
+            if (!query.fee || (query.fee.type !== 'bps' && query.fee.type !== 'fixed')){
                 return {
                     isValid: false,
                     errors: [`When isLastLook is true, a fee must be present`],
@@ -81,7 +93,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             v4SpecificFields.fee = {
                 token: query.fee.token,
                 amount: new BigNumber(query.fee.amount),
-                feeType: query.fee.feeType,
+                type: query.fee.type,
             }
         }
 
@@ -124,7 +136,7 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
             fee: {
                 amount: new BigNumber(body.fee.amount),
                 token: body.fee.token,
-                feeType: body.fee.feeType,
+                type: body.fee.type,
             },
             order: {
                 ...body.order,

@@ -1,5 +1,5 @@
 import { SignedOrder as V3SignedOrder } from '@0x/order-utils';
-import { RfqOrderFields as V4RfqOrder, Signature as V4Signature } from '@0x/protocol-utils';
+import { RfqOrderFields, RfqOrderFields as V4RfqOrder, Signature as V4Signature } from '@0x/protocol-utils';
 import { BigNumber } from '@0x/utils';
 
 // Requires that one of many properites is specified
@@ -16,7 +16,7 @@ export interface V4SignedRfqOrder extends V4RfqOrder {
 export interface Fee {
     token: string;
     amount: BigNumber;
-    feeType: 'fixed' | 'bps';
+    type: 'fixed' | 'bps';
 }
 
 export interface BaseTakerRequest {
@@ -42,7 +42,25 @@ export interface V4TakerRequest extends BaseTakerRequest {
 
 export type TakerRequest = V3TakerRequest | V4TakerRequest;
 
-export type TakerRequestQueryParams = RequireOnlyOne<
+export type TakerRequestQueryParamsUnnested = RequireOnlyOne<
+    {
+        sellTokenAddress: string;
+        buyTokenAddress: string;
+        takerAddress: string;
+        sellAmountBaseUnits?: string;
+        buyAmountBaseUnits?: string;
+        comparisonPrice?: string;
+        protocolVersion?: string;
+        txOrigin?: string;
+        isLastLook?: string;
+        feeToken?: string,
+        feeAmount?: string,
+        feeType?: string,
+    },
+    'sellAmountBaseUnits' | 'buyAmountBaseUnits'
+>;
+
+export type TakerRequestQueryParamsNested = RequireOnlyOne<
     {
         sellTokenAddress: string;
         buyTokenAddress: string;
@@ -56,7 +74,7 @@ export type TakerRequestQueryParams = RequireOnlyOne<
         fee?: {
             token: string;
             amount: string;
-            feeType: string;
+            type: string;
         };
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
