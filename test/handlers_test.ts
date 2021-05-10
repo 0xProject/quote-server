@@ -228,11 +228,9 @@ describe('parseTakerRequest', () => {
             protocolVersion: '4',
             txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
             isLastLook: 'true',
-            fee: {
-                amount: '300000',
-                token: ETH_TOKEN_ADDRESS,
-                feeType: 'fixed',
-            }
+            feeAmount: '300000',
+            feeToken: ETH_TOKEN_ADDRESS,
+            feeType: 'fixed',
         };
         const request = {
             query,
@@ -550,7 +548,7 @@ describe('submit request handler', () => {
         fee: {
             amount: new BigNumber('0'),
             token: ETH_TOKEN_ADDRESS,
-            feeType: 'fixed',
+            type: 'fixed',
         }
     };
 
@@ -558,7 +556,7 @@ describe('submit request handler', () => {
         fee: {
             amount: new BigNumber(0),
             token: ETH_TOKEN_ADDRESS,
-            feeType: 'fixed',
+            type: 'fixed',
         },
         proceedWithFill: true,
         signedOrderHash: '0xf000',
@@ -578,7 +576,7 @@ describe('submit request handler', () => {
                 fee: {
                     amount: '0',
                     token: ETH_TOKEN_ADDRESS,
-                    feeType: 'fixed',
+                    type: 'fixed',
                 }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
@@ -601,7 +599,7 @@ describe('submit request handler', () => {
                 fee: {
                     amount: '0',
                     token: ETH_TOKEN_ADDRESS,
-                    feeType: 'fixed',
+                    type: 'fixed',
                 }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
@@ -629,7 +627,7 @@ describe('submit request handler', () => {
                 fee: {
                     amount: '0',
                     token: ETH_TOKEN_ADDRESS,
-                    feeType: 'fixed',
+                    type: 'fixed',
                 }
             },
             headers: { '0x-api-key': fakeSubmitRequest.apiKey },
