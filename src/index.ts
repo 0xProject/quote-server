@@ -1,5 +1,6 @@
 export { SignedOrder } from '@0x/order-utils';
 export { serverRoutes } from './router';
+export { schemas } from './schemas';
 export {
     TakerRequest,
     Quoter,
