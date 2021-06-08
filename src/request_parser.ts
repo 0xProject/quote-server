@@ -146,6 +146,7 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
                 salt: new BigNumber(body.order.salt),
             },
             orderHash: body.orderHash,
+            takerTokenFillAmount: new BigNumber(body.takerTokenFillAmount),
             apiKey,
         };
 

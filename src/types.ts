@@ -126,6 +126,7 @@ export interface SubmitReceipt {
     proceedWithFill: boolean; // must be true if maker agrees
     fee: Fee;
     signedOrderHash: string;
+    takerTokenFillAmount: BigNumber;
 }
 
 export interface SubmitRequest {
@@ -133,6 +134,7 @@ export interface SubmitRequest {
     orderHash: string;
     fee: Fee;
     apiKey?: string;
+    takerTokenFillAmount: BigNumber;
 }
 
 export interface ZeroExTransactionWithoutDomain {

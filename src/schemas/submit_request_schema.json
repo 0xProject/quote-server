@@ -7,10 +7,13 @@
         "order": {
             "$ref": "/v4RfqOrderSchema"
         },
+        "takerTokenFillAmount": {
+            "$ref": "/wholeNumberSchema"
+        },
         "fee": {
             "$ref": "/feeSchema"
         }
     },
-    "required": ["orderHash", "order", "fee"],
+    "required": ["orderHash", "order", "fee", "takerTokenFillAmount"],
     "type": "object"
 }
