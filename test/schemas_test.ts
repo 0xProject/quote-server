@@ -40,6 +40,7 @@ describe('Schema', () => {
                     type: 'fixed',
                     token: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
                 },
+                takerTokenFillAmount: new BigNumber('1225000000000000000'),
                 proceedWithFill: true,
                 signedOrderHash: 'asdf',
             };
@@ -50,6 +51,7 @@ describe('Schema', () => {
                     type: 'fixed',
                     token: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
                 },
+                takerTokenFillAmount: '1225000000000000000',
                 proceedWithFill: false,
                 signedOrderHash: 'asdf',
             };
@@ -60,6 +62,7 @@ describe('Schema', () => {
                     type: 'fixed',
                     token: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
                 },
+                takerTokenFillAmount: '1225000000000000000',
                 proceedWithFill: false,
                 signedOrderHash: 'asdf',
             };

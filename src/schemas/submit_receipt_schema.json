@@ -9,8 +9,11 @@
         },
         "signedOrderHash": {
             "type": "string"
+        },
+        "takerTokenFillAmount": {
+            "$ref": "/wholeNumberSchema"
         }
     },
-    "required": ["proceedWithFill", "fee", "signedOrderHash"],
+    "required": ["proceedWithFill", "fee", "signedOrderHash", "takerTokenFillAmount"],
     "type": "object"
 }

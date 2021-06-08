@@ -545,6 +545,7 @@ describe('submit request handler', () => {
         order,
         orderHash: '0xf000',
         apiKey: 'kool-api-key',
+        takerTokenFillAmount: new BigNumber('1225000000000000000'),
         fee: {
             amount: new BigNumber('0'),
             token: ETH_TOKEN_ADDRESS,
@@ -560,6 +561,7 @@ describe('submit request handler', () => {
         },
         proceedWithFill: true,
         signedOrderHash: '0xf000',
+        takerTokenFillAmount: new BigNumber('1225000000000000000'),
     };
 
     it('should defer to quoter and return response for submit request', async () => {
@@ -573,6 +575,7 @@ describe('submit request handler', () => {
             body: {
                 order,
                 orderHash: '0xf000',
+                takerTokenFillAmount: '1225000000000000000',
                 fee: {
                     amount: '0',
                     token: ETH_TOKEN_ADDRESS,
@@ -623,6 +626,7 @@ describe('submit request handler', () => {
         const req = httpMocks.createRequest({
             body: {
                 order,
+                takerTokenFillAmount: '1225000000000000000',
                 orderHash: '0xf000',
                 fee: {
                     amount: '0',
