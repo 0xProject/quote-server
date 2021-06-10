@@ -9,6 +9,7 @@ export const serverRoutes = (quoteStrategy: Quoter) => {
     const router = express.Router();
 
     const apiKeyHandler = generateApiKeyHandler();
+    router.use(express.json());
     router.use(apiKeyHandler);
 
     router.get(
