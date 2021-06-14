@@ -7,12 +7,16 @@ import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
 import { parseSubmitRequest, parseTakerRequest } from './request_parser';
 import { Quoter } from './types';
 
+const API_KEY_DISABLED_PATHS = new Set(['/submit']);
+
 export const generateApiKeyHandler = (): express.RequestHandler => {
     const handler = (req: express.Request, res: express.Response, next: NextFunction) => {
         const query = req.query;
         const zeroExApiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
+        const pathIsNotApiKeyConstrained = API_KEY_DISABLED_PATHS.has(req.path);
 
         const isValid =
+            pathIsNotApiKeyConstrained ||
             query.canMakerControlSettlement ||
             (!query.canMakerControlSettlement && zeroExApiKey && typeof zeroExApiKey === 'string');
         if (isValid) {
