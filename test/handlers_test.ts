@@ -295,7 +295,7 @@ describe('api key handler', () => {
     it('do not reject when path is not API key constained', () => {
         const handler = generateApiKeyHandler();
         const req = httpMocks.createRequest({
-            path: '/submitz',
+            path: '/submit',
             method: 'POST',
         });
         const resp = httpMocks.createResponse();
