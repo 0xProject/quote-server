@@ -292,6 +292,21 @@ describe('parseTakerRequest', () => {
 });
 
 describe('api key handler', () => {
+    it('do not reject when path is not API key constained', () => {
+        const handler = generateApiKeyHandler();
+        const req = httpMocks.createRequest({
+            path: '/submitz',
+            method: 'POST',
+        });
+        const resp = httpMocks.createResponse();
+
+        handler(req, resp, () => {
+            return;
+        });
+
+        expect(resp._getStatusCode()).to.not.eq(HttpStatus.UNAUTHORIZED);
+    });
+
     it('reject when no API key specified', () => {
         const handler = generateApiKeyHandler();
         const req = httpMocks.createRequest();
