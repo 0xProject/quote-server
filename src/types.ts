@@ -1,5 +1,5 @@
 import { SignedOrder as V3SignedOrder } from '@0x/order-utils';
-import { RfqOrderFields, RfqOrderFields as V4RfqOrder, Signature as V4Signature } from '@0x/protocol-utils';
+import { OtcOrderFields as OtcOrder, RfqOrderFields, RfqOrderFields as V4RfqOrder, Signature as V4Signature } from '@0x/protocol-utils';
 import { BigNumber } from '@0x/utils';
 
 // Requires that one of many properites is specified
@@ -38,6 +38,8 @@ export interface V4TakerRequest extends BaseTakerRequest {
     txOrigin: string;
     isLastLook: boolean;
     fee?: Fee;
+    nonce?: string;
+    nonceBucket?: string;
 }
 
 export type TakerRequest = V3TakerRequest | V4TakerRequest;
@@ -53,9 +55,9 @@ export type TakerRequestQueryParamsUnnested = RequireOnlyOne<
         protocolVersion?: string;
         txOrigin?: string;
         isLastLook?: string;
-        feeToken?: string,
-        feeAmount?: string,
-        feeType?: string,
+        feeToken?: string;
+        feeAmount?: string;
+        feeType?: string;
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
@@ -113,13 +115,17 @@ export interface V4RFQFirmQuote {
     signedOrder: V4SignedRfqOrder;
 }
 
+export type OtcOrderFirmQuote = OtcOrder;
+
 export type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote>;
 
 // Implement quoter that is version agnostic
 export interface Quoter {
     fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuoteResponse>;
     fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuoteResponse>;
+    fetchFirmOtcQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuoteResponse>;
     submitFillAsync(submitRequest: SubmitRequest): Promise<SubmitReceipt | undefined>;
+    signOtcOrderAsync(signRequest: SignRequest): Promise<SignResponse | undefined>;
 }
 
 export interface SubmitReceipt {
@@ -135,6 +141,20 @@ export interface SubmitRequest {
     fee: Fee;
     apiKey?: string;
     takerTokenFillAmount: BigNumber;
+}
+
+export interface SignResponse {
+    fee: Fee;
+    makerSignature: V4Signature;
+    proceedWithFill: boolean; // must be true if maker agrees
+    signedOrderHash: string;
+}
+
+export interface SignRequest {
+    fee: Fee;
+    order: OtcOrder;
+    orderHash: string;
+    takerSignature: V4Signature;
 }
 
 export interface ZeroExTransactionWithoutDomain {
