@@ -5,10 +5,12 @@ import * as express from 'express';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
 import * as feeSchema from './schemas/fee.json';
+import * as signRequestSchema from './schemas/sign_request_schema.json';
 import * as submitRequestSchema from './schemas/submit_request_schema.json';
 import * as takerRequestSchema from './schemas/taker_request_schema.json';
 import {
     BaseTakerRequest,
+    SignRequest,
     SubmitRequest,
     SupportedVersion,
     TakerRequest,
@@ -24,7 +26,7 @@ schemaValidator.addSchema(feeSchema);
 
 export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'>): ParsedTakerRequest => {
     const queryUnnested: TakerRequestQueryParamsUnnested = req.query;
-    const {feeAmount, feeToken, feeType, ...rest} = queryUnnested;
+    const { feeAmount, feeToken, feeType, ...rest } = queryUnnested;
 
     // NOTE: Here we are un-flattening query parameters. GET query parameters are usually a single level key/value store.
     const query: TakerRequestQueryParamsNested = rest;
@@ -79,12 +81,14 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             sellAmountBaseUnits: query.sellAmountBaseUnits ? new BigNumber(query.sellAmountBaseUnits) : undefined,
             buyAmountBaseUnits: query.buyAmountBaseUnits ? new BigNumber(query.buyAmountBaseUnits) : undefined,
         };
-        const v4SpecificFields: Pick<V4TakerRequest, 'txOrigin' | 'isLastLook' | 'fee'> = {
+        const v4SpecificFields: Pick<V4TakerRequest, 'txOrigin' | 'isLastLook' | 'fee' | 'nonce' | 'nonceBucket'> = {
             txOrigin: query.txOrigin!,
             isLastLook,
+            nonce: query.nonce,
+            nonceBucket: query.nonceBucket,
         };
         if (isLastLook) {
-            if (!query.fee || (query.fee.type !== 'bps' && query.fee.type !== 'fixed')){
+            if (!query.fee || (query.fee.type !== 'bps' && query.fee.type !== 'fixed')) {
                 return {
                     isValid: false,
                     errors: [`When isLastLook is true, a fee must be present`],
@@ -94,7 +98,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
                 token: query.fee.token,
                 amount: new BigNumber(query.fee.amount),
                 type: query.fee.type,
-            }
+            };
         }
 
         let takerRequest: TakerRequest;
@@ -128,10 +132,6 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
     // Create schema validator
     const validationResult = schemaValidator.validate(body, submitRequestSchema);
     if (!validationResult.errors) {
-        let apiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
-        if (typeof apiKey !== 'string') {
-            apiKey = undefined;
-        }
         const submitRequest: SubmitRequest = {
             fee: {
                 amount: new BigNumber(body.fee.amount),
@@ -147,10 +147,45 @@ export const parseSubmitRequest = (req: express.Request): ParsedSubmitRequest =>
             },
             orderHash: body.orderHash,
             takerTokenFillAmount: new BigNumber(body.takerTokenFillAmount),
-            apiKey,
         };
 
         return { isValid: true, submitRequest };
+    }
+
+    const errors = validationResult.errors.map(e => {
+        const optionalDataPath = e.dataPath.length > 0 ? `${e.dataPath} ` : '';
+        return `${optionalDataPath}${e.message}`;
+    });
+    return {
+        isValid: false,
+        errors,
+    };
+};
+
+type ParsedSignRequest = { isValid: true; signRequest: SignRequest } | { isValid: false; errors: string[] };
+export const parseSignRequest = (req: express.Request): ParsedSignRequest => {
+    const body = req.body;
+
+    // Create schema validator
+    const validationResult = schemaValidator.validate(body, signRequestSchema);
+    if (!validationResult.errors) {
+        const signRequest: SignRequest = {
+            fee: {
+                amount: new BigNumber(body.fee.amount),
+                token: body.fee.token,
+                type: body.fee.type,
+            },
+            order: {
+                ...body.order,
+                makerAmount: new BigNumber(body.order.makerAmount),
+                takerAmount: new BigNumber(body.order.takerAmount),
+                expiryAndNonce: new BigNumber(body.order.expiryAndNonce),
+            },
+            orderHash: body.orderHash,
+            takerSignature: body.takerSignature,
+        };
+
+        return { isValid: true, signRequest };
     }
 
     const errors = validationResult.errors.map(e => {

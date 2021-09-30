@@ -1,0 +1,19 @@
+{
+    "id": "/SubmitReceiptSchema",
+    "properties": {
+        "fee": {
+            "$ref": "/feeSchema"
+        },
+        "makerSignature": {
+            "$ref": "/v4SignatureSchema"
+        },
+        "proceedWithFill": {
+            "type": "boolean"
+        },
+        "signedOrderHash": {
+            "type": "string"
+        }
+    },
+    "required": ["fee", "makerSignature", "proceedWithFill", "signedOrderHash"],
+    "type": "object"
+}

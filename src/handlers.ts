@@ -4,7 +4,7 @@ import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
-import { parseSubmitRequest, parseTakerRequest } from './request_parser';
+import { parseSignRequest, parseSubmitRequest, parseTakerRequest } from './request_parser';
 import { Quoter } from './types';
 
 const API_KEY_DISABLED_PATHS = new Set(['/submit']);
@@ -61,6 +61,20 @@ export const takerRequestHandler = async (
     return result.end();
 };
 
+export const fetchOtcQuoteHandler = async (quoter: Quoter, req: express.Request, res: express.Response) => {
+    const takerRequestResponse = parseTakerRequest(req);
+
+    if (!takerRequestResponse.isValid) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ errors: takerRequestResponse.errors });
+    }
+
+    const takerRequest = takerRequestResponse.takerRequest;
+
+    const response = await quoter.fetchFirmOtcQuoteAsync(takerRequest);
+    const result = response.order ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
+    return result.end();
+};
+
 export const submitRequestHandler = async (quoter: Quoter, req: express.Request, res: express.Response) => {
     const submitRequestResponse = parseSubmitRequest(req);
 
@@ -70,6 +84,20 @@ export const submitRequestHandler = async (quoter: Quoter, req: express.Request,
 
     const submitRequest = submitRequestResponse.submitRequest;
     const response = await quoter.submitFillAsync(submitRequest);
+
+    const result = response ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
+    return result.end();
+};
+
+export const signRequestHandler = async (quoter: Quoter, req: express.Request, res: express.Response) => {
+    const signRequestResponse = parseSignRequest(req);
+
+    if (!signRequestResponse.isValid) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ errors: signRequestResponse.errors });
+    }
+
+    const signRequest = signRequestResponse.signRequest;
+    const response = await quoter.signOtcOrderAsync(signRequest);
 
     const result = response ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
     return result.end();

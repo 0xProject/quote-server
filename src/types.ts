@@ -1,5 +1,10 @@
 import { SignedOrder as V3SignedOrder } from '@0x/order-utils';
-import { OtcOrderFields as OtcOrder, RfqOrderFields, RfqOrderFields as V4RfqOrder, Signature as V4Signature } from '@0x/protocol-utils';
+import {
+    OtcOrderFields as OtcOrder,
+    RfqOrderFields,
+    RfqOrderFields as V4RfqOrder,
+    Signature as V4Signature,
+} from '@0x/protocol-utils';
 import { BigNumber } from '@0x/utils';
 
 // Requires that one of many properites is specified
@@ -58,6 +63,8 @@ export type TakerRequestQueryParamsUnnested = RequireOnlyOne<
         feeToken?: string;
         feeAmount?: string;
         feeType?: string;
+        nonce?: string;
+        nonceBucket?: string;
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
@@ -78,6 +85,8 @@ export type TakerRequestQueryParamsNested = RequireOnlyOne<
             amount: string;
             type: string;
         };
+        nonce?: string;
+        nonceBucket?: string;
     },
     'sellAmountBaseUnits' | 'buyAmountBaseUnits'
 >;
@@ -115,7 +124,10 @@ export interface V4RFQFirmQuote {
     signedOrder: V4SignedRfqOrder;
 }
 
-export type OtcOrderFirmQuote = OtcOrder;
+export interface OtcOrderFirmQuoteResponse {
+    order?: OtcOrder;
+    signature?: V4Signature;
+}
 
 export type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQuote<'4', V4RFQFirmQuote>;
 
@@ -123,7 +135,7 @@ export type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQ
 export interface Quoter {
     fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuoteResponse>;
     fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuoteResponse>;
-    fetchFirmOtcQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuoteResponse>;
+    fetchFirmOtcQuoteAsync(takerRequest: TakerRequest): Promise<OtcOrderFirmQuoteResponse>;
     submitFillAsync(submitRequest: SubmitRequest): Promise<SubmitReceipt | undefined>;
     signOtcOrderAsync(signRequest: SignRequest): Promise<SignResponse | undefined>;
 }

@@ -2,7 +2,13 @@ import * as express from 'express';
 import * as asyncHandler from 'express-async-handler';
 import * as HttpStatus from 'http-status-codes';
 
-import { generateApiKeyHandler, submitRequestHandler, takerRequestHandler } from './handlers';
+import {
+    fetchOtcQuoteHandler,
+    generateApiKeyHandler,
+    signRequestHandler,
+    submitRequestHandler,
+    takerRequestHandler,
+} from './handlers';
 import { Quoter } from './types';
 
 export const serverRoutes = (quoteStrategy: Quoter) => {
@@ -32,6 +38,19 @@ export const serverRoutes = (quoteStrategy: Quoter) => {
         '/submit',
         asyncHandler(async (req: express.Request, res: express.Response) =>
             submitRequestHandler(quoteStrategy, req, res),
+        ),
+    );
+
+    router.get(
+        'otc/quote',
+        asyncHandler(async (req: express.Request, res: express.Response) =>
+            fetchOtcQuoteHandler(quoteStrategy, req, res),
+        ),
+    );
+    router.post(
+        'otc/sign',
+        asyncHandler(async (req: express.Request, res: express.Response) =>
+            signRequestHandler(quoteStrategy, req, res),
         ),
     );
     return router;
