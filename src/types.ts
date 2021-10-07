@@ -43,11 +43,14 @@ export interface V4TakerRequest extends BaseTakerRequest {
     txOrigin: string;
     isLastLook: boolean;
     fee?: Fee;
-    nonce?: string;
-    nonceBucket?: string;
 }
 
-export type TakerRequest = V3TakerRequest | V4TakerRequest;
+export interface V4TakerOtcRequest extends V4TakerRequest {
+    nonce: string;
+    nonceBucket: string;
+}
+
+export type TakerRequest = V3TakerRequest | V4TakerRequest | V4TakerOtcRequest;
 
 export type TakerRequestQueryParamsUnnested = RequireOnlyOne<
     {

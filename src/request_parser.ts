@@ -16,6 +16,7 @@ import {
     TakerRequest,
     TakerRequestQueryParamsNested,
     TakerRequestQueryParamsUnnested,
+    V4TakerOtcRequest,
     V4TakerRequest,
 } from './types';
 
@@ -81,12 +82,16 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             sellAmountBaseUnits: query.sellAmountBaseUnits ? new BigNumber(query.sellAmountBaseUnits) : undefined,
             buyAmountBaseUnits: query.buyAmountBaseUnits ? new BigNumber(query.buyAmountBaseUnits) : undefined,
         };
-        const v4SpecificFields: Pick<V4TakerRequest, 'txOrigin' | 'isLastLook' | 'fee' | 'nonce' | 'nonceBucket'> = {
+        const v4SpecificFields: Pick<V4TakerRequest, 'txOrigin' | 'isLastLook' | 'fee'> = {
             txOrigin: query.txOrigin!,
             isLastLook,
+        };
+
+        const v4OtcSpecificFields: Partial<V4TakerOtcRequest> = {
             nonce: query.nonce,
             nonceBucket: query.nonceBucket,
         };
+
         if (isLastLook) {
             if (!query.fee || (query.fee.type !== 'bps' && query.fee.type !== 'fixed')) {
                 return {
@@ -111,6 +116,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             takerRequest = {
                 ...takerRequestBase,
                 ...v4SpecificFields,
+                ...v4OtcSpecificFields,
                 protocolVersion,
             };
         }

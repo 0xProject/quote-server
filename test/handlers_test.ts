@@ -704,7 +704,7 @@ describe('taker request handler for OtcOrder', () => {
     });
 });
 
-describe.only('submit request handler', () => {
+describe('submit request handler', () => {
     const { signature, ...restOrder } = fakeV4Order;
     const order = {
         ...restOrder,
