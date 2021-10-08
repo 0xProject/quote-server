@@ -42,6 +42,13 @@ export const serverRoutes = (quoteStrategy: Quoter) => {
     );
 
     router.get(
+        'otc/price',
+        asyncHandler(async (req: express.Request, res: express.Response) =>
+            takerRequestHandler('indicative', quoteStrategy, req, res),
+        ),
+    );
+
+    router.get(
         'otc/quote',
         asyncHandler(async (req: express.Request, res: express.Response) =>
             fetchOtcQuoteHandler(quoteStrategy, req, res),

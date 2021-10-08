@@ -115,6 +115,7 @@ describe('parseTakerRequest', () => {
             headers: {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
+            path: '/price',
         };
         const parsedRequest = parseTakerRequest(request);
         if (parsedRequest.isValid && parsedRequest.takerRequest.comparisonPrice) {
@@ -138,6 +139,7 @@ describe('parseTakerRequest', () => {
             headers: {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
+            path: '/price',
         };
         const parsedRequest = parseTakerRequest(request);
         expect(parsedRequest.isValid).to.eql(false);
@@ -156,6 +158,7 @@ describe('parseTakerRequest', () => {
             headers: {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
+            path: '/price',
         };
         const parsedRequest = parseTakerRequest(request);
         expect(parsedRequest.isValid).to.eql(false);
@@ -173,6 +176,7 @@ describe('parseTakerRequest', () => {
             headers: {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
+            path: '/price',
         };
         const parsedRequest = parseTakerRequest(request);
         if (parsedRequest.isValid) {
@@ -194,6 +198,7 @@ describe('parseTakerRequest', () => {
             headers: {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
+            path: '/price',
         };
         const parsedRequest = parseTakerRequest(request);
         if (parsedRequest.isValid) {
@@ -217,6 +222,7 @@ describe('parseTakerRequest', () => {
             headers: {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
+            path: '/price',
         };
         const parsedRequest = parseTakerRequest(request);
         if (parsedRequest.isValid) {
@@ -245,6 +251,7 @@ describe('parseTakerRequest', () => {
             headers: {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
+            path: '/price',
         };
         const parsedRequest = parseTakerRequest(request);
         if (parsedRequest.isValid) {
@@ -273,6 +280,7 @@ describe('parseTakerRequest', () => {
             headers: {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
+            path: '/price',
         };
         const parsedRequest = parseTakerRequest(request);
         if (parsedRequest.isValid) {
@@ -283,6 +291,37 @@ describe('parseTakerRequest', () => {
             }
         } else {
             expect.fail('Parsed request is not valid');
+        }
+    });
+
+    it('should raise an error for v4 OtcOrder Quote requests with isLastLook but no nonce and nonceBucket', () => {
+        const query = {
+            sellTokenAddress: NULL_ADDRESS,
+            buyTokenAddress: NULL_ADDRESS,
+            takerAddress: NULL_ADDRESS,
+            sellAmountBaseUnits: '1225000000',
+            protocolVersion: '4',
+            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            isLastLook: 'true',
+            feeAmount: '300000',
+            feeToken: ETH_TOKEN_ADDRESS,
+            feeType: 'fixed',
+        };
+        const request = {
+            query,
+            headers: {
+                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
+            },
+            path: 'otc/quote',
+        };
+        const parsedRequest = parseTakerRequest(request);
+        if (parsedRequest.isValid) {
+            expect.fail('Parsed request should not be valid');
+        } else {
+            expect(parsedRequest.errors.length).to.eql(1);
+            expect(parsedRequest.errors[0]).to.eql(
+                'nonce and nonceBucket fields must be present when requesting a quote for an OtcOrder',
+            );
         }
     });
 
@@ -316,6 +355,7 @@ describe('parseTakerRequest', () => {
                 headers: {
                     [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
                 },
+                path: '/price',
             };
             const parsedRequest = parseTakerRequest(request);
             if (parsedRequest.isValid) {

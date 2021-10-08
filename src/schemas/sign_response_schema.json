@@ -1,5 +1,5 @@
 {
-    "id": "/SubmitReceiptSchema",
+    "id": "/SignResponseSchema",
     "properties": {
         "fee": {
             "$ref": "/feeSchema"

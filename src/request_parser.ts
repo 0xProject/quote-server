@@ -25,7 +25,8 @@ type ParsedTakerRequest = { isValid: true; takerRequest: TakerRequest } | { isVa
 const schemaValidator = new SchemaValidator();
 schemaValidator.addSchema(feeSchema);
 
-export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'>): ParsedTakerRequest => {
+export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query' | 'path'>): ParsedTakerRequest => {
+    const path = req.path;
     const queryUnnested: TakerRequestQueryParamsUnnested = req.query;
     const { feeAmount, feeToken, feeType, ...rest } = queryUnnested;
 
@@ -86,6 +87,16 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             txOrigin: query.txOrigin!,
             isLastLook,
         };
+
+        const isOtcQuote = /otc\/quote/.test(path);
+        if (isOtcQuote) {
+            if (!query.nonce || !query.nonceBucket) {
+                return {
+                    isValid: false,
+                    errors: ['nonce and nonceBucket fields must be present when requesting a quote for an OtcOrder'],
+                };
+            }
+        }
 
         const v4OtcSpecificFields: Partial<V4TakerOtcRequest> = {
             nonce: query.nonce,
