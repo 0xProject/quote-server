@@ -206,7 +206,7 @@ export const parseSignRequest = (req: express.Request): ParsedSignRequest => {
     }
 
     const errors = validationResult.errors.map(e => {
-        const optionalDataPath = e.dataPath.length > 0 ? `${e.dataPath} ` : '';
+        const optionalDataPath = e.dataPath.length ? `${e.dataPath} ` : '';
         return `${optionalDataPath}${e.message}`;
     });
     return {
