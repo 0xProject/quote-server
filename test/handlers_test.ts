@@ -11,7 +11,7 @@ import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
 import {
     fetchOtcQuoteHandler,
     generateApiKeyHandler,
-    signRequestHandler,
+    signOtcRequestHandler,
     submitRequestHandler,
     takerRequestHandler,
 } from '../src/handlers';
@@ -906,7 +906,7 @@ describe('sign request handler', () => {
         });
         const resp = httpMocks.createResponse();
 
-        await signRequestHandler(quoter.object, req, resp);
+        await signOtcRequestHandler(quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
         expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedSignResponse)));
@@ -928,7 +928,7 @@ describe('sign request handler', () => {
         });
         const resp = httpMocks.createResponse();
 
-        await signRequestHandler(quoter.object, req, resp);
+        await signOtcRequestHandler(quoter.object, req, resp);
         expect(resp._getStatusCode()).to.eql(HttpStatus.BAD_REQUEST);
         const returnedData = resp._getJSONData();
         expect(Object.keys(returnedData)).to.eql(['errors']);
@@ -956,7 +956,7 @@ describe('sign request handler', () => {
         });
         const resp = httpMocks.createResponse();
 
-        await signRequestHandler(quoter.object, req, resp);
+        await signOtcRequestHandler(quoter.object, req, resp);
 
         expect(resp._getStatusCode()).to.eql(HttpStatus.NO_CONTENT);
 

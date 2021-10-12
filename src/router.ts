@@ -5,7 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 import {
     fetchOtcQuoteHandler,
     generateApiKeyHandler,
-    signRequestHandler,
+    signOtcRequestHandler,
     submitRequestHandler,
     takerRequestHandler,
 } from './handlers';
@@ -57,7 +57,7 @@ export const serverRoutes = (quoteStrategy: Quoter) => {
     router.post(
         'otc/sign',
         asyncHandler(async (req: express.Request, res: express.Response) =>
-            signRequestHandler(quoteStrategy, req, res),
+            signOtcRequestHandler(quoteStrategy, req, res),
         ),
     );
     return router;

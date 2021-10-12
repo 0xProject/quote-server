@@ -89,7 +89,7 @@ export const submitRequestHandler = async (quoter: Quoter, req: express.Request,
     return result.end();
 };
 
-export const signRequestHandler = async (quoter: Quoter, req: express.Request, res: express.Response) => {
+export const signOtcRequestHandler = async (quoter: Quoter, req: express.Request, res: express.Response) => {
     const signRequestResponse = parseSignRequest(req);
 
     if (!signRequestResponse.isValid) {
