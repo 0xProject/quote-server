@@ -312,7 +312,7 @@ describe('parseTakerRequest', () => {
             headers: {
                 [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
             },
-            path: 'otc/quote',
+            path: 'rfqm/v2/quote',
         };
         const parsedRequest = parseTakerRequest(request);
         if (parsedRequest.isValid) {
@@ -881,7 +881,6 @@ describe('sign request handler', () => {
             type: 'fixed',
         },
         proceedWithFill: true,
-        signedOrderHash: '0xf000',
         makerSignature: fakeMakerSignature,
     };
 

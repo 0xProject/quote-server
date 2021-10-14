@@ -88,7 +88,7 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             isLastLook,
         };
 
-        const isOtcQuote = /otc\/quote/.test(path);
+        const isOtcQuote = /rfqm\/v2\/quote/.test(path);
         if (isOtcQuote) {
             if (!query.nonce || !query.nonceBucket) {
                 return {

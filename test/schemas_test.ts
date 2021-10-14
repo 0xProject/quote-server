@@ -268,7 +268,6 @@ describe('Schema', () => {
                 },
                 makerSignature: fakeMakerSignature,
                 proceedWithFill: true,
-                signedOrderHash: '0xdeadbeef',
             };
 
             const validSchema2 = {

@@ -42,20 +42,20 @@ export const serverRoutes = (quoteStrategy: Quoter) => {
     );
 
     router.get(
-        'otc/price',
+        'rfqm/v2/price',
         asyncHandler(async (req: express.Request, res: express.Response) =>
             takerRequestHandler('indicative', quoteStrategy, req, res),
         ),
     );
 
     router.get(
-        'otc/quote',
+        'rfqm/v2/quote',
         asyncHandler(async (req: express.Request, res: express.Response) =>
             fetchOtcQuoteHandler(quoteStrategy, req, res),
         ),
     );
     router.post(
-        'otc/sign',
+        'rfqm/v2/sign',
         asyncHandler(async (req: express.Request, res: express.Response) =>
             signOtcRequestHandler(quoteStrategy, req, res),
         ),
