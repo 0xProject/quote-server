@@ -14,6 +14,6 @@
             "type": "string"
         }
     },
-    "required": ["fee", "makerSignature", "proceedWithFill", "signedOrderHash"],
+    "required": ["proceedWithFill"],
     "type": "object"
 }

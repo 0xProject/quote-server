@@ -1,5 +1,6 @@
 // tslint:disable:max-file-line-count
 import { SchemaValidator } from '@0x/json-schemas';
+import { OtcOrderFields, Signature } from '@0x/protocol-utils';
 import { BigNumber } from '@0x/utils';
 import * as chai from 'chai';
 
@@ -7,9 +8,17 @@ import { SubmitReceipt, TakerRequest } from '../src';
 import * as feeSchema from '../src/schemas/fee.json';
 import * as otcQuoteResponseSchema from '../src/schemas/otc_quote_response_schema.json';
 import * as submitReceiptSchema from '../src/schemas/submit_receipt_schema.json';
+import * as signRequestSchema from '../src/schemas/sign_request_schema.json';
+import * as signResponseSchema from '../src/schemas/sign_response_schema.json';
 import * as takerRequestSchema from '../src/schemas/taker_request_schema.json';
+import { SignRequest } from '../src/types';
 
 const expect = chai.expect;
+
+function toHexString(bn: BigNumber): string {
+    const base16 = 16;
+    return `0x${bn.toString(base16)}`;
+}
 
 describe('Schema', () => {
     // Share a SchemaValidator across all runs
@@ -165,6 +174,114 @@ describe('Schema', () => {
             };
 
             validateAgainstSchema([invalidSchema], submitReceiptSchema, true);
+        });
+    });
+    describe('SignRequestSchema', () => {
+        const fakeTakerSignature: Signature = {
+            signatureType: 3,
+            v: 27,
+            r: '0x00',
+            s: '0x00',
+        };
+
+        const sampleOtcOrder: OtcOrderFields = {
+            makerToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
+            takerToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            makerAmount: new BigNumber(1000000000000000000),
+            takerAmount: new BigNumber(1),
+            maker: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            taker: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
+            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            expiryAndNonce: new BigNumber('0x6148f04f00000000000000010000000000000000000000006148f437'),
+            chainId: 1,
+            verifyingContract: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+        };
+
+        it('should parse valid schema', () => {
+            const validSchema1 = {
+                fee: {
+                    amount: new BigNumber(100),
+                    type: 'fixed',
+                    token: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+                },
+                takerSignature: fakeTakerSignature,
+                order: { ...sampleOtcOrder, expiryAndNonce: toHexString(sampleOtcOrder.expiryAndNonce) },
+                orderHash: '0xdeadbeef',
+            };
+
+            const validSchema2 = {
+                fee: {
+                    amount: 100, // not a BigNumber
+                    type: 'fixed',
+                    token: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+                },
+                takerSignature: fakeTakerSignature,
+                order: { ...sampleOtcOrder, expiryAndNonce: toHexString(sampleOtcOrder.expiryAndNonce) },
+                orderHash: '0xdeadbeef',
+            };
+
+            validateAgainstSchema([validSchema1, validSchema2], signRequestSchema, false);
+        });
+
+        it('should reject schema with a malformed fee property', () => {
+            const invalidSchema = {
+                fee: {
+                    amount: new BigNumber(100),
+                    type: 'pastry', // not a valid type
+                    token: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+                },
+                takerSignature: fakeTakerSignature,
+                order: sampleOtcOrder,
+                orderHash: 'asdf',
+            };
+
+            validateAgainstSchema([invalidSchema], signRequestSchema, true);
+        });
+    });
+    describe('SignResponseSchema', () => {
+        const fakeMakerSignature: Signature = {
+            signatureType: 3,
+            v: 27,
+            r: '0x00',
+            s: '0x00',
+        };
+
+        const sampleOtcOrder: OtcOrderFields = {
+            makerToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
+            takerToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            makerAmount: new BigNumber(1000000000000000000),
+            takerAmount: new BigNumber(1),
+            maker: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            taker: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
+            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            expiryAndNonce: new BigNumber('0x6148f04f00000000000000010000000000000000000000006148f437'),
+            chainId: 1,
+            verifyingContract: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+        };
+
+        it('should parse valid schema', () => {
+            const validSchema1 = {
+                fee: {
+                    amount: new BigNumber(100),
+                    type: 'fixed',
+                    token: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+                },
+                makerSignature: fakeMakerSignature,
+                proceedWithFill: true,
+                signedOrderHash: '0xdeadbeef',
+            };
+
+            const validSchema2 = {
+                proceedWithFill: false,
+            };
+
+            validateAgainstSchema([validSchema1, validSchema2], signResponseSchema, false);
+        });
+
+        it('should reject schema without required properties', () => {
+            const invalidSchema = {};
+
+            validateAgainstSchema([invalidSchema], signResponseSchema, true);
         });
     });
 });

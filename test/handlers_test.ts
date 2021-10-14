@@ -913,6 +913,37 @@ describe('sign request handler', () => {
 
         quoter.verifyAll();
     });
+    it('should defer to quoter and handle proceedWithFill = false response', async () => {
+        const negativeSignResponse: SignResponse = {
+            proceedWithFill: false,
+        };
+        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
+        quoter
+            .setup(async q => q.signOtcOrderAsync(fakeSignRequest))
+            .returns(async () => negativeSignResponse)
+            .verifiable(TypeMoq.Times.once());
+
+        const req = httpMocks.createRequest({
+            body: {
+                order: rawOrder,
+                orderHash: '0xf000',
+                takerSignature: fakeTakerSignature,
+                fee: {
+                    amount: '0',
+                    token: ETH_TOKEN_ADDRESS,
+                    type: 'fixed',
+                },
+            },
+        });
+        const resp = httpMocks.createResponse();
+
+        await signOtcRequestHandler(quoter.object, req, resp);
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(negativeSignResponse)));
+
+        quoter.verifyAll();
+    });
     it('should invalidate a bad request', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
 

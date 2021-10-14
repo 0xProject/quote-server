@@ -159,10 +159,10 @@ export interface SubmitRequest {
 }
 
 export interface SignResponse {
-    fee: Fee;
-    makerSignature: V4Signature;
+    fee?: Fee;
+    makerSignature?: V4Signature;
     proceedWithFill: boolean; // must be true if maker agrees
-    signedOrderHash: string;
+    signedOrderHash?: string;
 }
 
 export interface SignRequest {
