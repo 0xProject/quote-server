@@ -1,0 +1,19 @@
+{
+    "id": "/SignRequestSchema",
+    "properties": {
+        "fee": {
+            "$ref": "/feeSchema"
+        },
+        "order": {
+            "$ref": "/v4OtcOrderSchema"
+        },
+        "orderHash": {
+            "$ref": "/hexSchema"
+        },
+        "takerSignature": {
+            "$ref": "/v4SignatureSchema"
+        }
+    },
+    "required": ["fee", "order", "orderHash", "takerSignature"],
+    "type": "object"
+}

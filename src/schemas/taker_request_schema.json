@@ -25,6 +25,12 @@
         },
         "fee": {
             "$ref": "/feeSchema"
+        },
+        "nonce": {
+            "$ref": "/numberSchema"
+        },
+        "nonceBucket": {
+            "$ref": "/numberSchema"
         }
     },
     "required": ["sellTokenAddress", "buyTokenAddress", "takerAddress"],
