@@ -4,7 +4,6 @@ export { schemas } from './schemas';
 export {
     FirmQuoteResponse,
     IndicativeQuoteResponse,
-    OtcOrderFirmQuoteResponse,
     Quoter,
     SignRequest,
     SignResponse,
