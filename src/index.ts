@@ -17,5 +17,7 @@ export {
     V4RFQFirmQuote,
     V4RFQIndicativeQuote,
     V4SignedRfqOrder,
+    V4TakerOtcRequest,
+    V4TakerRequest,
     VersionedQuote,
 } from './types';
