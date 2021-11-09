@@ -9,7 +9,7 @@ import * as TypeMoq from 'typemoq';
 
 import { ZERO_EX_API_KEY_HEADER_STRING } from '../src/constants';
 import {
-    fetchOtcQuoteHandler,
+    fetchOtcPriceHandler,
     generateApiKeyHandler,
     signOtcRequestHandler,
     submitRequestHandler,
@@ -17,7 +17,7 @@ import {
 } from '../src/handlers';
 import { parseTakerRequest } from '../src/request_parser';
 import {
-    OtcOrderFirmQuoteResponse,
+    IndicativeOtcQuote,
     Quoter,
     SignRequest,
     SignResponse,
@@ -294,37 +294,6 @@ describe('parseTakerRequest', () => {
         }
     });
 
-    it('should raise an error for v4 OtcOrder Quote requests with isLastLook but no nonce and nonceBucket', () => {
-        const query = {
-            sellTokenAddress: NULL_ADDRESS,
-            buyTokenAddress: NULL_ADDRESS,
-            takerAddress: NULL_ADDRESS,
-            sellAmountBaseUnits: '1225000000',
-            protocolVersion: '4',
-            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
-            isLastLook: 'true',
-            feeAmount: '300000',
-            feeToken: ETH_TOKEN_ADDRESS,
-            feeType: 'fixed',
-        };
-        const request = {
-            query,
-            headers: {
-                [ZERO_EX_API_KEY_HEADER_STRING]: '0xfoo',
-            },
-            path: 'rfqm/v2/quote',
-        };
-        const parsedRequest = parseTakerRequest(request);
-        if (parsedRequest.isValid) {
-            expect.fail('Parsed request should not be valid');
-        } else {
-            expect(parsedRequest.errors.length).to.eql(1);
-            expect(parsedRequest.errors[0]).to.eql(
-                'nonce and nonceBucket fields must be present when requesting a quote for an OtcOrder',
-            );
-        }
-    });
-
     it('should fail version with an invalid protocol or txOrigin', () => {
         const tests: { protocolVersion: string; txOrigin?: string; expectedErrorMsg: string }[] = [
             {
@@ -432,8 +401,6 @@ describe('taker request handler', () => {
         txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
         protocolVersion: '4',
         isLastLook: false,
-        nonce: undefined,
-        nonceBucket: undefined,
     };
 
     it('should defer to quoter and return response for firm quote', async () => {
@@ -624,123 +591,67 @@ describe('taker request handler', () => {
     });
 });
 
-describe('taker request handler for OtcOrder', () => {
-    const fakeV4TakerOtcRequest: TakerRequest = {
-        buyTokenAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
-        sellTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-        buyAmountBaseUnits: new BigNumber(1000000000000000000),
-        sellAmountBaseUnits: undefined,
-        takerAddress: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
-        apiKey: 'kool-api-key',
-        comparisonPrice: undefined,
-        txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
-        protocolVersion: '4',
-        isLastLook: true,
-        nonce: '1633022316',
-        nonceBucket: '0',
-        fee: {
-            amount: new BigNumber('0'),
-            token: ETH_TOKEN_ADDRESS,
-            type: 'fixed',
-        },
-    };
-
-    const queryParams = {
-        protocolVersion: fakeV4TakerOtcRequest.protocolVersion,
-        buyTokenAddress: fakeV4TakerOtcRequest.buyTokenAddress,
-        sellTokenAddress: fakeV4TakerOtcRequest.sellTokenAddress,
-        // tslint:disable-next-line: no-non-null-assertion
-        buyAmountBaseUnits: fakeV4TakerOtcRequest.buyAmountBaseUnits!.toString(),
-        takerAddress: fakeV4TakerOtcRequest.takerAddress,
-        isLastLook: fakeV4TakerOtcRequest.isLastLook.toString(),
-        nonce: fakeV4TakerOtcRequest.nonce,
-        nonceBucket: fakeV4TakerOtcRequest.nonceBucket,
-        txOrigin: fakeV4TakerOtcRequest.txOrigin,
-        fee: {
-            amount: '0',
-            token: ETH_TOKEN_ADDRESS,
-            type: 'fixed',
-        },
-    };
-
-    const expectedOrder: OtcOrderFields = {
-        makerToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
-        takerToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-        makerAmount: new BigNumber(1000000000000000000),
-        takerAmount: new BigNumber(1),
-        maker: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
-        taker: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
-        txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
-        expiryAndNonce: new BigNumber('0x6148f04f00000000000000010000000000000000000000006148f437'),
-        chainId: 1,
-        verifyingContract: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
-    };
-
-    it('should defer to quoter and return response for otc firm quote', async () => {
+describe('/rfqm/v2/price handler', () => {
+    it('should defer to quoter and return response for indicative quote', async () => {
         const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
-        const expectedOtcResponse: OtcOrderFirmQuoteResponse = {
-            order: expectedOrder,
+        const expectedRequest: TakerRequest = {
+            buyTokenAddress: '0x5510cF4Ea8643976DD2522378dD92c34fF90E928',
+            sellTokenAddress: '0x444768182823b571Ffef3596DB943C1A512969d8',
+            buyAmountBaseUnits: new BigNumber(1),
+            sellAmountBaseUnits: undefined,
+            takerAddress: '0x8a333a18B924554D6e83EF9E9944DE6260f61D3B',
+            apiKey: 'kool-api-key',
+            comparisonPrice: undefined,
+            txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+            protocolVersion: '4',
+            isLastLook: true,
+            fee: {
+                amount: new BigNumber(300000),
+                token: ETH_TOKEN_ADDRESS,
+                type: 'fixed',
+            },
+            requestUuid: 'b29ccd4e-8ba4-4ef6-95e2-966f3d80b541',
+        };
+        const expectedResponse: IndicativeOtcQuote = {
+            maker: '0x3eA00574D59f4b3a51128687Ec49AEF7A0085032',
+            makerToken: '0x5510cF4Ea8643976DD2522378dD92c34fF90E928',
+            takerToken: '0x444768182823b571Ffef3596DB943C1A512969d8',
+            makerAmount: new BigNumber(1),
+            takerAmount: new BigNumber(1),
+            expiry: new BigNumber(1636512941),
         };
         quoter
-            .setup(async q => q.fetchFirmOtcQuoteAsync(fakeV4TakerOtcRequest))
-            .returns(async () => expectedOtcResponse)
+            .setup(async q => q.fetchIndicativeOtcQuoteAsync(expectedRequest))
+            .returns(async () => expectedResponse)
             .verifiable(TypeMoq.Times.once());
-
-        const req = httpMocks.createRequest({
-            query: queryParams,
-            headers: { '0x-api-key': fakeV4TakerOtcRequest.apiKey },
-        });
-        const resp = httpMocks.createResponse();
-
-        await fetchOtcQuoteHandler(quoter.object, req, resp);
-
-        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
-        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedOtcResponse)));
-
-        quoter.verifyAll();
-    });
-
-    it('should handle empty firm quote', async () => {
-        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
-        quoter
-            .setup(async q => q.fetchFirmOtcQuoteAsync(fakeV4TakerOtcRequest))
-            .returns(async () => {
-                return {};
-            })
-            .verifiable(TypeMoq.Times.once());
-
-        const req = httpMocks.createRequest({
-            query: queryParams,
-            headers: { '0x-api-key': fakeV4TakerOtcRequest.apiKey },
-        });
-        const resp = httpMocks.createResponse();
-
-        await fetchOtcQuoteHandler(quoter.object, req, resp);
-
-        expect(resp._getStatusCode()).to.eql(HttpStatus.NO_CONTENT);
-
-        quoter.verifyAll();
-    });
-    it('should invalidate a bad request', async () => {
-        const quoter = TypeMoq.Mock.ofType<Quoter>(undefined, TypeMoq.MockBehavior.Strict);
 
         const req = httpMocks.createRequest({
             query: {
-                sellTokenAddress: fakeV4TakerOtcRequest.sellTokenAddress,
-                // tslint:disable-next-line:no-non-null-assertion
-                buyAmountBaseUnits: fakeV4TakerOtcRequest.buyAmountBaseUnits!.toString(),
-                takerAddress: fakeV4TakerOtcRequest.takerAddress,
+                buyTokenAddress: expectedRequest.buyTokenAddress,
+                sellTokenAddress: expectedRequest.sellTokenAddress,
+                // tslint:disable-next-line: no-non-null-assertion
+                buyAmountBaseUnits: expectedRequest.buyAmountBaseUnits!.toString(),
+                takerAddress: expectedRequest.takerAddress,
+                txOrigin: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
+                protocolVersion: '4',
+                isLastLook: 'true',
+                feeAmount: '300000',
+                feeToken: ETH_TOKEN_ADDRESS,
+                feeType: 'fixed',
             },
-            headers: { '0x-api-key': fakeV4TakerOtcRequest.apiKey },
+            headers: {
+                '0x-api-key': expectedRequest.apiKey,
+                '0x-request-uuid': 'b29ccd4e-8ba4-4ef6-95e2-966f3d80b541',
+            },
         });
         const resp = httpMocks.createResponse();
 
-        await fetchOtcQuoteHandler(quoter.object, req, resp);
-        expect(resp._getStatusCode()).to.eql(HttpStatus.BAD_REQUEST);
-        const returnedData = resp._getJSONData();
-        expect(Object.keys(returnedData)).to.eql(['errors']);
-        expect(returnedData.errors.length).to.eql(1);
-        expect(returnedData.errors[0]).to.eql(" should have required property 'buyTokenAddress'");
+        await fetchOtcPriceHandler(quoter.object, req, resp);
+
+        expect(resp._getStatusCode()).to.eql(HttpStatus.OK);
+        expect(resp._getJSONData()).to.eql(JSON.parse(JSON.stringify(expectedResponse)));
+
+        quoter.verifyAll();
     });
 });
 
@@ -863,6 +774,7 @@ describe('sign request handler', () => {
         // tslint:disable-next-line: custom-no-magic-numbers
         expiryAndNonce: `0x${fakeOtcOrder.expiryAndNonce.toString(16)}`,
     };
+    const expiry = '1636415959';
     const fakeSignRequest: SignRequest = {
         order,
         orderHash: '0xf000',
@@ -871,6 +783,7 @@ describe('sign request handler', () => {
             token: ETH_TOKEN_ADDRESS,
             type: 'fixed',
         },
+        expiry: new BigNumber(expiry),
         takerSignature: fakeTakerSignature,
     };
 
@@ -896,6 +809,7 @@ describe('sign request handler', () => {
                 order: rawOrder,
                 orderHash: '0xf000',
                 takerSignature: fakeTakerSignature,
+                expiry,
                 fee: {
                     amount: '0',
                     token: ETH_TOKEN_ADDRESS,
@@ -927,6 +841,7 @@ describe('sign request handler', () => {
                 order: rawOrder,
                 orderHash: '0xf000',
                 takerSignature: fakeTakerSignature,
+                expiry,
                 fee: {
                     amount: '0',
                     token: ETH_TOKEN_ADDRESS,
@@ -962,7 +877,7 @@ describe('sign request handler', () => {
         expect(resp._getStatusCode()).to.eql(HttpStatus.BAD_REQUEST);
         const returnedData = resp._getJSONData();
         expect(Object.keys(returnedData)).to.eql(['errors']);
-        expect(returnedData.errors.length).to.eql(2);
+        expect(returnedData.errors.length).to.eql(3);
         expect(returnedData.errors[0]).to.eql("should have required property 'orderHash'");
     });
     it('should handle empty response', async () => {
@@ -976,6 +891,7 @@ describe('sign request handler', () => {
             body: {
                 order: rawOrder,
                 orderHash: '0xf000',
+                expiry,
                 takerSignature: fakeTakerSignature,
                 fee: {
                     amount: '0',

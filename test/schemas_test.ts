@@ -206,6 +206,7 @@ describe('Schema', () => {
                 },
                 takerSignature: fakeTakerSignature,
                 order: { ...sampleOtcOrder, expiryAndNonce: toHexString(sampleOtcOrder.expiryAndNonce) },
+                expiry: '1636418321',
                 orderHash: '0xdeadbeef',
             };
 
@@ -217,6 +218,7 @@ describe('Schema', () => {
                 },
                 takerSignature: fakeTakerSignature,
                 order: { ...sampleOtcOrder, expiryAndNonce: toHexString(sampleOtcOrder.expiryAndNonce) },
+                expiry: 1636418321,
                 orderHash: '0xdeadbeef',
             };
 
