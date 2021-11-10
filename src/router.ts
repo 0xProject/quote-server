@@ -2,7 +2,13 @@ import * as express from 'express';
 import * as asyncHandler from 'express-async-handler';
 import * as HttpStatus from 'http-status-codes';
 
-import { generateApiKeyHandler, signOtcRequestHandler, submitRequestHandler, takerRequestHandler } from './handlers';
+import {
+    fetchOtcPriceHandler,
+    generateApiKeyHandler,
+    signOtcRequestHandler,
+    submitRequestHandler,
+    takerRequestHandler,
+} from './handlers';
 import { Quoter } from './types';
 
 export const serverRoutes = (quoteStrategy: Quoter) => {
@@ -38,7 +44,7 @@ export const serverRoutes = (quoteStrategy: Quoter) => {
     router.get(
         'rfqm/v2/price',
         asyncHandler(async (req: express.Request, res: express.Response) =>
-            takerRequestHandler('indicative', quoteStrategy, req, res),
+            fetchOtcPriceHandler(quoteStrategy, req, res),
         ),
     );
 
