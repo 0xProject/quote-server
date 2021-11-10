@@ -29,6 +29,7 @@ export interface BaseTakerRequest {
     buyTokenAddress: string;
     takerAddress: string;
     apiKey?: string;
+    requestUuid?: string;
     sellAmountBaseUnits?: BigNumber;
     buyAmountBaseUnits?: BigNumber;
     comparisonPrice?: BigNumber;
@@ -45,12 +46,7 @@ export interface V4TakerRequest extends BaseTakerRequest {
     fee?: Fee;
 }
 
-export interface V4TakerOtcRequest extends V4TakerRequest {
-    nonce: string;
-    nonceBucket: string;
-}
-
-export type TakerRequest = V3TakerRequest | V4TakerRequest | V4TakerOtcRequest;
+export type TakerRequest = V3TakerRequest | V4TakerRequest;
 
 export type TakerRequestQueryParamsUnnested = RequireOnlyOne<
     {
@@ -114,6 +110,15 @@ export type V4RFQIndicativeQuote = Pick<
     'makerToken' | 'makerAmount' | 'takerToken' | 'takerAmount' | 'expiry'
 >;
 
+export interface IndicativeOtcQuote {
+    expiry: BigNumber;
+    makerToken: string;
+    takerToken: string;
+    makerAmount: BigNumber;
+    takerAmount: BigNumber;
+    maker: string;
+}
+
 export type IndicativeQuoteResponse =
     | VersionedQuote<'3', V3RFQIndicativeQuote>
     | VersionedQuote<'4', V4RFQIndicativeQuote>;
@@ -137,8 +142,8 @@ export type FirmQuoteResponse = VersionedQuote<'3', V3RFQFirmQuote> | VersionedQ
 // Implement quoter that is version agnostic
 export interface Quoter {
     fetchIndicativeQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeQuoteResponse>;
+    fetchIndicativeOtcQuoteAsync(takerRequest: TakerRequest): Promise<IndicativeOtcQuote>;
     fetchFirmQuoteAsync(takerRequest: TakerRequest): Promise<FirmQuoteResponse>;
-    fetchFirmOtcQuoteAsync(takerRequest: TakerRequest): Promise<OtcOrderFirmQuoteResponse>;
     submitFillAsync(submitRequest: SubmitRequest): Promise<SubmitReceipt | undefined>;
     signOtcOrderAsync(signRequest: SignRequest): Promise<SignResponse | undefined>;
 }
@@ -168,6 +173,7 @@ export interface SignRequest {
     fee: Fee;
     order: OtcOrder;
     orderHash: string;
+    expiry: BigNumber;
     takerSignature: V4Signature;
 }
 

@@ -30,6 +30,19 @@ export const generateApiKeyHandler = (): express.RequestHandler => {
     return handler;
 };
 
+export const fetchOtcPriceHandler = async (quoter: Quoter, req: express.Request, res: express.Response) => {
+    const takerRequestResponse = parseTakerRequest(req);
+
+    if (!takerRequestResponse.isValid) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ errors: takerRequestResponse.errors });
+    }
+
+    const response = await quoter.fetchIndicativeOtcQuoteAsync(takerRequestResponse.takerRequest);
+
+    const result = response ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
+    return result.end();
+};
+
 export const takerRequestHandler = async (
     takerRequestType: 'firm' | 'indicative',
     quoter: Quoter,
@@ -58,20 +71,6 @@ export const takerRequestHandler = async (
             .end();
     }
     const result = response ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
-    return result.end();
-};
-
-export const fetchOtcQuoteHandler = async (quoter: Quoter, req: express.Request, res: express.Response) => {
-    const takerRequestResponse = parseTakerRequest(req);
-
-    if (!takerRequestResponse.isValid) {
-        return res.status(HttpStatus.BAD_REQUEST).json({ errors: takerRequestResponse.errors });
-    }
-
-    const takerRequest = takerRequestResponse.takerRequest;
-
-    const response = await quoter.fetchFirmOtcQuoteAsync(takerRequest);
-    const result = response.order ? res.status(HttpStatus.OK).json(response) : res.status(HttpStatus.NO_CONTENT);
     return result.end();
 };
 

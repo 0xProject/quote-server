@@ -10,10 +10,13 @@
         "orderHash": {
             "$ref": "/hexSchema"
         },
+        "expiry": {
+            "$ref": "/wholeNumberSchema"
+        },
         "takerSignature": {
             "$ref": "/v4SignatureSchema"
         }
     },
-    "required": ["fee", "order", "orderHash", "takerSignature"],
+    "required": ["fee", "order", "orderHash", "expiry", "takerSignature"],
     "type": "object"
 }

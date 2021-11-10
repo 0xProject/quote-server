@@ -3,7 +3,7 @@ import { SchemaValidator } from '@0x/json-schemas';
 import { BigNumber, NULL_ADDRESS } from '@0x/utils';
 import * as express from 'express';
 
-import { ZERO_EX_API_KEY_HEADER_STRING } from './constants';
+import { ZERO_EX_API_KEY_HEADER_STRING, ZERO_EX_REQUEST_UUID_HEADER_STRING } from './constants';
 import * as feeSchema from './schemas/fee.json';
 import * as signRequestSchema from './schemas/sign_request_schema.json';
 import * as submitRequestSchema from './schemas/submit_request_schema.json';
@@ -16,7 +16,6 @@ import {
     TakerRequest,
     TakerRequestQueryParamsNested,
     TakerRequestQueryParamsUnnested,
-    V4TakerOtcRequest,
     V4TakerRequest,
 } from './types';
 
@@ -45,6 +44,11 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
         let apiKey = req.headers[ZERO_EX_API_KEY_HEADER_STRING];
         if (typeof apiKey !== 'string') {
             apiKey = undefined;
+        }
+
+        let requestUuid = req.headers[ZERO_EX_REQUEST_UUID_HEADER_STRING];
+        if (typeof requestUuid !== 'string') {
+            requestUuid = undefined;
         }
 
         let protocolVersion: SupportedVersion;
@@ -83,24 +87,14 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             sellAmountBaseUnits: query.sellAmountBaseUnits ? new BigNumber(query.sellAmountBaseUnits) : undefined,
             buyAmountBaseUnits: query.buyAmountBaseUnits ? new BigNumber(query.buyAmountBaseUnits) : undefined,
         };
+
+        if (requestUuid !== undefined) {
+            takerRequestBase.requestUuid = requestUuid;
+        }
+
         const v4SpecificFields: Pick<V4TakerRequest, 'txOrigin' | 'isLastLook' | 'fee'> = {
             txOrigin: query.txOrigin!,
             isLastLook,
-        };
-
-        const isOtcQuote = /rfqm\/v2\/quote/.test(path);
-        if (isOtcQuote) {
-            if (!query.nonce || !query.nonceBucket) {
-                return {
-                    isValid: false,
-                    errors: ['nonce and nonceBucket fields must be present when requesting a quote for an OtcOrder'],
-                };
-            }
-        }
-
-        const v4OtcSpecificFields: Partial<V4TakerOtcRequest> = {
-            nonce: query.nonce,
-            nonceBucket: query.nonceBucket,
         };
 
         if (isLastLook) {
@@ -127,7 +121,6 @@ export const parseTakerRequest = (req: Pick<express.Request, 'headers' | 'query'
             takerRequest = {
                 ...takerRequestBase,
                 ...v4SpecificFields,
-                ...v4OtcSpecificFields,
                 protocolVersion,
             };
         }
@@ -199,6 +192,7 @@ export const parseSignRequest = (req: express.Request): ParsedSignRequest => {
                 expiryAndNonce: new BigNumber(body.order.expiryAndNonce),
             },
             orderHash: body.orderHash,
+            expiry: new BigNumber(body.expiry),
             takerSignature: body.takerSignature,
         };
 
