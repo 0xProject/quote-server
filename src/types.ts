@@ -175,6 +175,8 @@ export interface SignRequest {
     orderHash: string;
     expiry: BigNumber;
     takerSignature: V4Signature;
+    takerSpecifiedAmount?: string;
+
 }
 
 export interface ZeroExTransactionWithoutDomain {
